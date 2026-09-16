@@ -586,10 +586,12 @@ body {
 
 .book-details-header {
   flex-wrap: nowrap;
+  gap: 12px;
 }
 @media (max-width: 768px) {
   .book-details-header {
     flex-wrap: wrap;
+    gap: 8px;
   }
 }
 
@@ -601,9 +603,15 @@ body {
   cursor: pointer;
   padding: 8px 0;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 .btn-back:hover {
   color: #8b5cf6;
+}
+@media (max-width: 768px) {
+  .btn-back {
+    font-size: 0.85rem;
+  }
 }
 
 .book-header-info {
@@ -616,14 +624,25 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+@media (max-width: 768px) {
+  .book-header-info h1 {
+    font-size: 1.25rem;
+  }
+}
 .book-header-info .book-author {
   color: #94a3b8;
   font-size: 0.95rem;
+}
+@media (max-width: 768px) {
+  .book-header-info .book-author {
+    font-size: 0.85rem;
+  }
 }
 
 .book-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .tabs-nav {
@@ -634,14 +653,16 @@ body {
   border-radius: 16px;
   margin-bottom: 24px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .tabs-nav::-webkit-scrollbar {
-  height: 4px;
+  display: none;
 }
 @media (max-width: 768px) {
   .tabs-nav {
     gap: 2px;
     padding: 6px;
+    margin-bottom: 16px;
   }
 }
 
@@ -656,6 +677,7 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .tab-btn:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -667,8 +689,8 @@ body {
 }
 @media (max-width: 768px) {
   .tab-btn {
-    padding: 10px 14px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 }
 
@@ -1150,7 +1172,7 @@ body {
   border-radius: 24px;
   width: calc(100% - 32px);
   max-width: 500px;
-  max-height: 90vh;
+  max-height: 85vh;
   overflow-y: auto;
   animation: slideUp 0.3s ease;
 }
@@ -1159,6 +1181,13 @@ body {
 }
 .modal-content.modal-lg {
   max-width: 600px;
+}
+@media (max-width: 768px) {
+  .modal-content {
+    width: calc(100% - 24px);
+    max-height: 80vh;
+    border-radius: 16px;
+  }
 }
 
 @keyframes slideUp {

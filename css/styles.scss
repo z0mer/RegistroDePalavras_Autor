@@ -691,9 +691,11 @@ body {
 
 .book-details-header {
     flex-wrap: nowrap;
+    gap: 12px;
     
     @media (max-width: $mobile) {
         flex-wrap: wrap;
+        gap: 8px;
     }
 }
 
@@ -705,9 +707,14 @@ body {
     cursor: pointer;
     padding: 8px 0;
     transition: $transition;
+    flex-shrink: 0;
     
     &:hover {
         color: $accent-primary;
+    }
+    
+    @media (max-width: $mobile) {
+        font-size: 0.85rem;
     }
 }
 
@@ -720,17 +727,26 @@ body {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        
+        @media (max-width: $mobile) {
+            font-size: 1.25rem;
+        }
     }
     
     .book-author {
         color: $text-secondary;
         font-size: 0.95rem;
+        
+        @media (max-width: $mobile) {
+            font-size: 0.85rem;
+        }
     }
 }
 
 .book-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 // ========================================
@@ -745,14 +761,16 @@ body {
     border-radius: $radius-lg;
     margin-bottom: 24px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     
     &::-webkit-scrollbar {
-        height: 4px;
+        display: none;
     }
     
     @media (max-width: $mobile) {
         gap: 2px;
         padding: 6px;
+        margin-bottom: 16px;
     }
 }
 
@@ -767,6 +785,7 @@ body {
     cursor: pointer;
     transition: $transition;
     white-space: nowrap;
+    flex-shrink: 0;
     
     &:hover {
         background: rgba(255, 255, 255, 0.05);
@@ -779,8 +798,8 @@ body {
     }
     
     @media (max-width: $mobile) {
-        padding: 10px 14px;
-        font-size: 0.8rem;
+        padding: 8px 12px;
+        font-size: 0.75rem;
     }
 }
 
@@ -1342,7 +1361,7 @@ body {
     border-radius: $radius-xl;
     width: calc(100% - 32px);
     max-width: 500px;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
     
@@ -1352,6 +1371,12 @@ body {
     
     &.modal-lg {
         max-width: 600px;
+    }
+    
+    @media (max-width: $mobile) {
+        width: calc(100% - 24px);
+        max-height: 80vh;
+        border-radius: $radius-lg;
     }
 }
 
