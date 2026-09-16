@@ -3,13 +3,13 @@
 // ========================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyClgtgavP88SZNJ-J2v32nFCRzuahI-INE",
+    apiKey: "AIzaSyACgigeu7G8SZNJ-JZv32nFCRzuahL-1NE",
     authDomain: "registrodepalavras.firebaseapp.com",
     projectId: "registrodepalavras",
     storageBucket: "registrodepalavras.firebasestorage.app",
-    messagingSenderId: "908021304531",
-    appId: "1:908021304531:web:0b489e1b9ac2f5ef3c59A4",
-    measurementId: "G-67RF9KM1Z8"
+    messagingSenderId: "985281364531",
+    appId: "1:985281364531:web:0b439e1b9ac2f5ef3c5946",
+    measurementId: "G-67RP3KM128"
 };
 
 // Initialize Firebase
