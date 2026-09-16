@@ -12,12 +12,17 @@ const Storage = {
             if (!currentUser) return [];
             const snapshot = await db.collection('books')
                 .where('userId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            const books = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Sort locally instead of using Firestore orderBy (avoids index requirement)
+            return books.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateB - dateA;
+            });
         } catch (error) {
             console.error('Erro ao buscar livros:', error);
             throw error;
@@ -110,12 +115,13 @@ const Storage = {
             if (!currentUser) return [];
             const snapshot = await db.collection('records')
                 .where('userId', '==', currentUser.uid)
-                .orderBy('date', 'desc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            const records = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Sort locally by date descending
+            return records.sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (error) {
             console.error('Erro ao buscar registros:', error);
             throw error;
@@ -170,12 +176,16 @@ const Storage = {
         try {
             const snapshot = await db.collection('characters')
                 .where('bookId', '==', bookId)
-                .orderBy('createdAt', 'asc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            const characters = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            return characters.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateA - dateB;
+            });
         } catch (error) {
             console.error('Erro ao buscar personagens:', error);
             throw error;
@@ -227,12 +237,16 @@ const Storage = {
         try {
             const snapshot = await db.collection('scenarios')
                 .where('bookId', '==', bookId)
-                .orderBy('createdAt', 'asc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            const scenarios = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            return scenarios.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateA - dateB;
+            });
         } catch (error) {
             console.error('Erro ao buscar cenários:', error);
             throw error;
@@ -284,12 +298,12 @@ const Storage = {
         try {
             const snapshot = await db.collection('chapters')
                 .where('bookId', '==', bookId)
-                .orderBy('number', 'asc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            const chapters = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            return chapters.sort((a, b) => a.number - b.number);
         } catch (error) {
             console.error('Erro ao buscar capítulos:', error);
             throw error;
