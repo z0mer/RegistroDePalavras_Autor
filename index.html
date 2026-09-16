@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Palavras</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-logo">📖</div>
+            <h1>Registro de Palavras</h1>
+            <p>Acompanhe seu progresso de escrita</p>
+            <button class="btn-google" id="btnGoogleLogin">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <div class="app" id="mainApp" style="display: none;">
+        <!-- Sidebar Desktop -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">📚</span>
+                    <span class="logo-text">Registro de Palavras</span>
+                </div>
+                <div class="user-info" id="userInfo">
+                    <img id="userAvatar" src="" alt="Avatar">
+                    <button class="btn-logout" id="btnLogout" title="Sair">↪</button>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                <button class="nav-item" data-page="books">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-text">Meus Livros</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-new-record" id="btnNewRecord">
+                    <span>+</span> Novo Registro
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page active" id="dashboardPage">
+                <header class="page-header">
+                    <h1>Dashboard</h1>
+                    <p class="page-subtitle">Acompanhe seu progresso de escrita</p>
+                </header>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">✍️</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="totalWords">0</span>
+                            <span class="stat-label">Palavras Totais</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="avgWords">0</span>
+                            <span class="stat-label">Média por Dia</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="streak">0</span>
+                            <span class="stat-label">Dias Consecutivos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="bestDay">0</span>
+                            <span class="stat-label">Melhor Dia</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <h2>Palavras por Dia</h2>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-range="7">7 dias</button>
+                            <button class="filter-btn" data-range="30">30 dias</button>
+                            <button class="filter-btn" data-range="all">Tudo</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="wordsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Records -->
+                <div class="recent-section">
+                    <h2>Registros Recentes</h2>
+                    <div class="records-list" id="recentRecords">
+                        <div class="empty-state">
+                            <span class="empty-icon">📝</span>
+                            <p>Nenhum registro ainda. Comece a escrever!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Books Page -->
+            <section class="page" id="booksPage">
+                <header class="page-header">
+                    <h1>Meus Livros</h1>
+                    <button class="btn-primary" id="btnNewBook">
+                        <span>+</span> Novo Livro
+                    </button>
+                </header>
+
+                <div class="books-grid" id="booksGrid">
+                    <div class="empty-state">
+                        <span class="empty-icon">📚</span>
+                        <p>Nenhum livro cadastrado ainda.</p>
+                        <button class="btn-primary" id="btnNewBookEmpty">Criar Primeiro Livro</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Book Details Page -->
+            <section class="page" id="bookDetailsPage">
+                <header class="page-header book-details-header">
+                    <button class="btn-back" id="btnBackToBooks">
+                        ← Voltar
+                    </button>
+                    <div class="book-header-info">
+                        <h1 id="bookDetailTitle">Título do Livro</h1>
+                        <p class="book-author" id="bookDetailAuthor">por Autor</p>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn-icon" id="btnEditBook" title="Editar">✏️</button>
+                        <button class="btn-icon btn-danger" id="btnDeleteBook" title="Excluir">🗑️</button>
+                    </div>
+                </header>
+
+                <!-- Tabs Navigation -->
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="progress">📊 Progresso</button>
+                    <button class="tab-btn" data-tab="characters">👥 Personagens</button>
+                    <button class="tab-btn" data-tab="summary">📝 Resumo</button>
+                    <button class="tab-btn" data-tab="settings">🌍 Cenários</button>
+                    <button class="tab-btn" data-tab="chapters">📖 Capítulos</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="tab-contents">
+                    <!-- Progress Tab -->
+                    <div class="tab-content active" id="tabProgress">
+                        <div class="book-stats-row">
+                            <div class="book-stat-card">
+                                <span class="book-stat-value" id="bookTotalWords">0</span>
+                                <span class="book-stat-label">palavras escritas</span>
+                            </div>
+                            <div class="book-stat-card">
+                                <span class="book-stat-value" id="bookTotalRecords">0</span>
+                                <span class="book-stat-label">registros</span>
+                            </div>
+                        </div>
+
+                        <div class="book-chart-section">
+                            <div class="section-header">
+                                <h3>Progresso de Escrita</h3>
+                                <button class="btn-primary btn-sm" id="btnNewRecordBook">+ Registro</button>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="bookChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="book-records-section">
+                            <h3>Histórico de Registros</h3>
+                            <div class="records-list" id="bookRecordsList">
+                                <div class="empty-state">
+                                    <p>Nenhum registro para este livro.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Characters Tab -->
+                    <div class="tab-content" id="tabCharacters">
+                        <div class="section-header">
+                            <h3>Personagens</h3>
+                            <button class="btn-primary btn-sm" id="btnAddCharacter">+ Personagem</button>
+                        </div>
+                        <div class="characters-grid" id="charactersGrid">
+                            <div class="empty-state">
+                                <span class="empty-icon">👥</span>
+                                <p>Nenhum personagem cadastrado.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Tab -->
+                    <div class="tab-content" id="tabSummary">
+                        <div class="section-header">
+                            <h3>Resumo do Livro</h3>
+                            <button class="btn-primary btn-sm" id="btnEditSummary">✏️ Editar</button>
+                        </div>
+                        <div class="summary-content" id="summaryContent">
+                            <div class="empty-state">
+                                <span class="empty-icon">📝</span>
+                                <p>Nenhum resumo adicionado.</p>
+                                <button class="btn-primary" id="btnAddSummary">Adicionar Resumo</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings/Scenarios Tab -->
+                    <div class="tab-content" id="tabSettings">
+                        <div class="section-header">
+                            <h3>Cenários</h3>
+                            <button class="btn-primary btn-sm" id="btnAddScenario">+ Cenário</button>
+                        </div>
+                        <div class="scenarios-list" id="scenariosList">
+                            <div class="empty-state">
+                                <span class="empty-icon">🌍</span>
+                                <p>Nenhum cenário cadastrado.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chapters Tab -->
+                    <div class="tab-content" id="tabChapters">
+                        <div class="section-header">
+                            <h3>Capítulos</h3>
+                            <button class="btn-primary btn-sm" id="btnAddChapter">+ Capítulo</button>
+                        </div>
+                        <div class="chapters-table-container">
+                            <table class="chapters-table" id="chaptersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nº</th>
+                                        <th>Título</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chaptersBody">
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="chaptersEmpty">
+                                <span class="empty-icon">📖</span>
+                                <p>Nenhum capítulo cadastrado.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <button class="mobile-nav-item active" data-page="dashboard">
+                <span class="mobile-nav-icon">📊</span>
+                <span class="mobile-nav-text">Dashboard</span>
+            </button>
+            <button class="mobile-nav-item" data-page="books">
+                <span class="mobile-nav-icon">📖</span>
+                <span class="mobile-nav-text">Livros</span>
+            </button>
+            <button class="mobile-nav-item mobile-nav-add" id="btnNewRecordMobile">
+                <span class="mobile-nav-icon">+</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modal: Novo Livro (Simplificado) -->
+    <div class="modal" id="modalNewBook">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalBookTitle">Novo Livro</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formBook">
+                <input type="hidden" id="bookId">
+                <div class="form-group">
+                    <label for="bookTitle">Título *</label>
+                    <input type="text" id="bookTitle" required placeholder="Nome do seu livro">
+                </div>
+                <div class="form-group">
+                    <label for="bookAuthor">Autor *</label>
+                    <input type="text" id="bookAuthor" required placeholder="Seu nome ou pseudônimo">
+                </div>
+                <div class="form-group">
+                    <label for="bookColor">Cor do Livro</label>
+                    <div class="color-picker">
+                        <button type="button" class="color-option active" data-color="#8b5cf6" style="background: #8b5cf6"></button>
+                        <button type="button" class="color-option" data-color="#ec4899" style="background: #ec4899"></button>
+                        <button type="button" class="color-option" data-color="#06b6d4" style="background: #06b6d4"></button>
+                        <button type="button" class="color-option" data-color="#10b981" style="background: #10b981"></button>
+                        <button type="button" class="color-option" data-color="#f59e0b" style="background: #f59e0b"></button>
+                        <button type="button" class="color-option" data-color="#ef4444" style="background: #ef4444"></button>
+                    </div>
+                    <input type="hidden" id="bookColor" value="#8b5cf6">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Livro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Registro -->
+    <div class="modal" id="modalNewRecord">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Novo Registro</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formRecord">
+                <input type="hidden" id="recordId">
+                <div class="form-group">
+                    <label for="recordBook">Livro *</label>
+                    <select id="recordBook" required>
+                        <option value="">Selecione um livro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recordDate">Data *</label>
+                    <input type="date" id="recordDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="recordWords">Quantidade de Palavras *</label>
+                    <input type="number" id="recordWords" required min="1" placeholder="Ex: 1500">
+                </div>
+                <div class="form-group">
+                    <label for="recordNotes">Notas</label>
+                    <textarea id="recordNotes" rows="2" placeholder="Ex: Capítulo 01, 02 e 03"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Personagem -->
+    <div class="modal" id="modalCharacter">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 id="modalCharacterTitle">Novo Personagem</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formCharacter">
+                <input type="hidden" id="characterId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="characterName">Nome *</label>
+                        <input type="text" id="characterName" required placeholder="Nome do personagem">
+                    </div>
+                    <div class="form-group">
+                        <label for="characterAge">Idade</label>
+                        <input type="text" id="characterAge" placeholder="Ex: 25 anos">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="characterAvatar">Foto do Personagem (URL)</label>
+                    <input type="text" id="characterAvatar" placeholder="Cole o link de uma imagem (Pinterest, Google, etc)">
+                    <small class="form-hint">Dica: Clique com botão direito na imagem → "Copiar endereço da imagem"</small>
+                </div>
+                <div class="form-group">
+                    <label for="characterQualities">Qualidades</label>
+                    <textarea id="characterQualities" rows="2" placeholder="Ex: Corajoso, leal, inteligente"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="characterFlaws">Defeitos</label>
+                    <textarea id="characterFlaws" rows="2" placeholder="Ex: Impulsivo, teimoso"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="characterDescription">Descrição</label>
+                    <textarea id="characterDescription" rows="3" placeholder="Descrição geral do personagem"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Personagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Resumo -->
+    <div class="modal" id="modalSummary">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Resumo do Livro</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formSummary">
+                <div class="form-group">
+                    <label for="summaryText">Resumo</label>
+                    <textarea id="summaryText" rows="10" placeholder="Escreva o resumo do seu livro..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Resumo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Cenário -->
+    <div class="modal" id="modalScenario">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 id="modalScenarioTitle">Novo Cenário</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formScenario">
+                <input type="hidden" id="scenarioId">
+                <div class="form-group">
+                    <label for="scenarioName">Nome do Local *</label>
+                    <input type="text" id="scenarioName" required placeholder="Ex: Cidade de Aurora">
+                </div>
+                <div class="form-group">
+                    <label for="scenarioDescription">Descrição</label>
+                    <textarea id="scenarioDescription" rows="5" placeholder="Descreva este cenário..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Cenário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Capítulo -->
+    <div class="modal" id="modalChapter">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalChapterTitle">Novo Capítulo</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formChapter">
+                <input type="hidden" id="chapterId">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 0 0 80px;">
+                        <label for="chapterNumber">Nº *</label>
+                        <input type="number" id="chapterNumber" required min="1" placeholder="1">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="chapterTitle">Título</label>
+                        <input type="text" id="chapterTitle" placeholder="Título do capítulo (opcional)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="chapterStatus">Status</label>
+                    <select id="chapterStatus">
+                        <option value="not_written">Não Escrito</option>
+                        <option value="writing">Escrevendo</option>
+                        <option value="written">Escrito</option>
+                        <option value="revised">Revisado</option>
+                        <option value="rewrite">Reescrever</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close">✕</button>
+                    <button type="submit" class="btn-primary">Salvar Capítulo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmação de Exclusão -->
+    <div class="modal" id="modalConfirm">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Confirmar Exclusão</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Tem certeza que deseja excluir?</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-close-form modal-close">✕</button>
+                <button type="button" class="btn-danger" id="btnConfirmDelete">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
