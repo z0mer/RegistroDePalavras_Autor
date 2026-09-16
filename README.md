@@ -1,0 +1,1 @@
+# RegistroDePalavras_Autor
