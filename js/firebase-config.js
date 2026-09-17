@@ -18,11 +18,4 @@ firebase.initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = firebase.firestore();
 
-// Initialize Auth
-const auth = firebase.auth();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-
-// Current user
-let currentUser = null;
-
 console.log('🔥 Firebase inicializado com sucesso!');
