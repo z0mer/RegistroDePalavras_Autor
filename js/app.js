@@ -25,64 +25,38 @@ const App = {
     async init() {
         console.log('🚀 Inicializando aplicação...');
         
-        // Setup auth listener
-        this.setupAuth();
+        // Setup theme toggle
+        document.getElementById('btnToggleTheme').addEventListener('click', () => this.toggleTheme());
         
-        // Setup login button
-        document.getElementById('btnGoogleLogin').addEventListener('click', () => this.loginWithGoogle());
-        document.getElementById('btnLogout').addEventListener('click', () => this.logout());
+        // Load saved theme
+        this.loadTheme();
+        
+        // Setup app
+        this.setupNavigation();
+        this.setupModals();
+        this.setupForms();
+        this.setupChartFilters();
+        this.setupTabs();
 
-        console.log('✅ Aguardando autenticação...');
+        await this.loadData();
+        this.initCharts();
+
+        document.getElementById('recordDate').value = Storage.getDateString();
+        console.log('✅ Aplicação inicializada!');
     },
 
-    setupAuth() {
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                console.log('👤 Usuário logado:', user.displayName);
-                
-                // Update UI
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'flex';
-                document.getElementById('userAvatar').src = user.photoURL || '';
-                
-                // Setup app
-                this.setupNavigation();
-                this.setupModals();
-                this.setupForms();
-                this.setupChartFilters();
-                this.setupTabs();
-
-                await this.loadData();
-                this.initCharts();
-
-                document.getElementById('recordDate').value = Storage.getDateString();
-                console.log('✅ Aplicação inicializada!');
-            } else {
-                currentUser = null;
-                console.log('👤 Usuário não logado');
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('mainApp').style.display = 'none';
-            }
-        });
+    loadTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('btnToggleTheme').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
     },
 
-    async loginWithGoogle() {
-        try {
-            await auth.signInWithPopup(googleProvider);
-        } catch (error) {
-            console.error('Erro no login:', error);
-            this.showToast('Erro ao fazer login. Tente novamente.', 'error');
-        }
-    },
-
-    async logout() {
-        try {
-            await auth.signOut();
-            this.showToast('Você saiu da conta.', 'info');
-        } catch (error) {
-            console.error('Erro ao sair:', error);
-        }
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('btnToggleTheme').textContent = newTheme === 'dark' ? '🌙' : '☀️';
     },
 
     // ========================================
@@ -177,12 +151,10 @@ const App = {
         const totalWords = Storage.calculateTotalWords(this.records);
         const avgWords = Storage.calculateAverageWords(this.records);
         const bestDay = Storage.findBestDay(this.records);
-        const streak = Storage.calculateStreak(this.records);
 
         document.getElementById('totalWords').textContent = Storage.formatWords(totalWords);
         document.getElementById('avgWords').textContent = Storage.formatWords(avgWords);
         document.getElementById('bestDay').textContent = Storage.formatWords(bestDay);
-        document.getElementById('streak').textContent = streak;
 
         this.renderRecentRecords();
     },
@@ -214,6 +186,7 @@ const App = {
                     </div>
                     <div class="record-words">${Storage.formatWords(record.words)}</div>
                     <div class="record-actions">
+                        <button class="btn-icon" onclick="App.editRecord('${record.id}')" title="Editar">✏️</button>
                         <button class="btn-icon" onclick="App.deleteRecord('${record.id}')" title="Excluir">🗑️</button>
                     </div>
                 </div>
@@ -493,6 +466,7 @@ const App = {
                 </div>
                 <div class="record-words">${Storage.formatWords(record.words)}</div>
                 <div class="record-actions">
+                    <button class="btn-icon" onclick="event.stopPropagation(); App.editRecord('${record.id}')" title="Editar">✏️</button>
                     <button class="btn-icon" onclick="event.stopPropagation(); App.deleteRecord('${record.id}')" title="Excluir">🗑️</button>
                 </div>
             </div>
@@ -520,13 +494,12 @@ const App = {
             <div class="character-card">
                 <div class="character-header">
                     <div class="character-avatar">
-                        ${char.avatar && char.avatar.startsWith('http') 
-                            ? `<img src="${char.avatar}" alt="${char.name}">` 
-                            : (char.avatar || '👤')}
+                        ${char.emoji || '👤'}
                     </div>
                     <div class="character-info">
                         <h4>${this.escapeHtml(char.name)}</h4>
-                        ${char.age ? `<span>${char.age}</span>` : ''}
+                        ${char.avatarName ? `<span class="avatar-name">${this.escapeHtml(char.avatarName)}</span>` : ''}
+                        ${char.age || char.gender ? `<span>${[char.age, char.gender].filter(Boolean).join(' • ')}</span>` : ''}
                     </div>
                     <div class="character-actions">
                         <button class="btn-icon" onclick="App.editCharacter('${char.id}')" title="Editar">✏️</button>
@@ -615,21 +588,31 @@ const App = {
         table.style.display = 'table';
         emptyState.style.display = 'none';
 
-        tbody.innerHTML = this.chapters.map(chapter => `
-            <tr>
-                <td class="chapter-number">${chapter.number}</td>
-                <td class="chapter-title">${chapter.title ? this.escapeHtml(chapter.title) : '-'}</td>
-                <td class="chapter-status">
-                    <span class="status-badge status-${chapter.status}">
-                        ${Storage.getStatusIcon(chapter.status)} ${Storage.getStatusLabel(chapter.status)}
-                    </span>
-                </td>
-                <td class="chapter-actions">
-                    <button class="btn-icon" onclick="App.editChapter('${chapter.id}')" title="Editar">✏️</button>
-                    <button class="btn-icon btn-danger" onclick="App.deleteChapter('${chapter.id}')" title="Excluir">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
+        // Calculate words per chapter from records
+        const bookRecords = this.records.filter(r => r.bookId === this.currentBookId);
+
+        tbody.innerHTML = this.chapters.map(chapter => {
+            // Sum words for this chapter
+            const chapterRecords = bookRecords.filter(r => r.chapterId === chapter.id);
+            const chapterWords = chapterRecords.reduce((sum, r) => sum + (r.words || 0), 0);
+            
+            return `
+                <tr>
+                    <td class="chapter-number">${chapter.number}</td>
+                    <td class="chapter-title">${chapter.title ? this.escapeHtml(chapter.title) : '-'}</td>
+                    <td class="chapter-words">${chapterWords > 0 ? Storage.formatWords(chapterWords) : '-'}</td>
+                    <td class="chapter-status">
+                        <span class="status-badge status-${chapter.status}">
+                            ${Storage.getStatusIcon(chapter.status)} ${Storage.getStatusLabel(chapter.status)}
+                        </span>
+                    </td>
+                    <td class="chapter-actions">
+                        <button class="btn-icon" onclick="App.editChapter('${chapter.id}')" title="Editar">✏️</button>
+                        <button class="btn-icon btn-danger" onclick="App.deleteChapter('${chapter.id}')" title="Excluir">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     },
 
     // ========================================
@@ -669,6 +652,15 @@ const App = {
                 document.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById('bookColor').value = btn.dataset.color;
+            });
+        });
+        
+        // Emoji picker
+        document.querySelectorAll('.emoji-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.emoji-option').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('characterEmoji').value = btn.dataset.emoji;
             });
         });
 
@@ -719,16 +711,68 @@ const App = {
         this.openModal('modalNewBook');
     },
 
-    openRecordModal(bookId = null) {
+    openRecordModal(bookId = null, recordId = null) {
         const form = document.getElementById('formRecord');
         form.reset();
         document.getElementById('recordId').value = '';
         document.getElementById('recordDate').value = Storage.getDateString();
 
-        if (bookId) document.getElementById('recordBook').value = bookId;
-
         this.updateBookSelect();
+
+        // Add event listener for book change to update chapters
+        document.getElementById('recordBook').onchange = (e) => {
+            this.updateChapterSelect(e.target.value);
+        };
+
+        if (recordId) {
+            // Edit mode
+            const record = this.records.find(r => r.id === recordId);
+            if (record) {
+                document.getElementById('recordId').value = record.id;
+                document.getElementById('recordBook').value = record.bookId;
+                document.getElementById('recordDate').value = record.date;
+                document.getElementById('recordWords').value = record.words;
+                document.getElementById('recordNotes').value = record.notes || '';
+                
+                // Load chapters and set the selected one
+                this.updateChapterSelect(record.bookId).then(() => {
+                    if (record.chapterId) {
+                        document.getElementById('recordChapter').value = record.chapterId;
+                    }
+                });
+            }
+        } else if (bookId) {
+            document.getElementById('recordBook').value = bookId;
+            this.updateChapterSelect(bookId);
+        }
+        
         this.openModal('modalNewRecord');
+    },
+
+    editRecord(recordId) {
+        const record = this.records.find(r => r.id === recordId);
+        if (record) {
+            this.openRecordModal(record.bookId, recordId);
+        }
+    },
+
+    async updateChapterSelect(bookId) {
+        const select = document.getElementById('recordChapter');
+        select.innerHTML = '<option value="">Nenhum capítulo específico</option>';
+        
+        if (!bookId) return;
+        
+        try {
+            const chapters = await Storage.getChaptersByBook(bookId);
+            chapters.forEach(chapter => {
+                const option = document.createElement('option');
+                option.value = chapter.id;
+                option.textContent = `Cap. ${chapter.number}${chapter.title ? ': ' + chapter.title : ''}`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar capítulos:', error);
+        }
     },
 
     openCharacterModal(characterId = null) {
@@ -737,6 +781,12 @@ const App = {
 
         form.reset();
         document.getElementById('characterId').value = '';
+        document.getElementById('characterEmoji').value = '👤';
+        
+        // Reset emoji picker
+        document.querySelectorAll('.emoji-option').forEach((btn, i) => {
+            btn.classList.toggle('active', i === 0);
+        });
 
         if (characterId) {
             const char = this.characters.find(c => c.id === characterId);
@@ -745,10 +795,17 @@ const App = {
                 document.getElementById('characterId').value = char.id;
                 document.getElementById('characterName').value = char.name;
                 document.getElementById('characterAge').value = char.age || '';
-                document.getElementById('characterAvatar').value = char.avatar || '';
+                document.getElementById('characterGender').value = char.gender || '';
+                document.getElementById('characterAvatarName').value = char.avatarName || '';
+                document.getElementById('characterEmoji').value = char.emoji || '👤';
                 document.getElementById('characterQualities').value = char.qualities || '';
                 document.getElementById('characterFlaws').value = char.flaws || '';
                 document.getElementById('characterDescription').value = char.description || '';
+                
+                // Set active emoji
+                document.querySelectorAll('.emoji-option').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.emoji === (char.emoji || '👤'));
+                });
             }
         } else {
             title.textContent = 'Novo Personagem';
@@ -961,10 +1018,12 @@ const App = {
     },
 
     async saveRecord() {
+        const recordId = document.getElementById('recordId').value;
         const recordData = {
             bookId: document.getElementById('recordBook').value,
             date: document.getElementById('recordDate').value,
             words: parseInt(document.getElementById('recordWords').value),
+            chapterId: document.getElementById('recordChapter').value || null,
             notes: document.getElementById('recordNotes').value.trim()
         };
 
@@ -974,8 +1033,13 @@ const App = {
         }
 
         try {
-            await Storage.createRecord(recordData);
-            this.showToast('Registro salvo!', 'success');
+            if (recordId) {
+                await Storage.updateRecord(recordId, recordData);
+                this.showToast('Registro atualizado!', 'success');
+            } else {
+                await Storage.createRecord(recordData);
+                this.showToast('Registro salvo!', 'success');
+            }
             this.closeAllModals();
             await this.loadData();
             if (this.currentBookId === recordData.bookId) this.openBookDetails(this.currentBookId);
@@ -990,7 +1054,9 @@ const App = {
             bookId: this.currentBookId,
             name: document.getElementById('characterName').value.trim(),
             age: document.getElementById('characterAge').value.trim(),
-            avatar: document.getElementById('characterAvatar').value.trim(),
+            gender: document.getElementById('characterGender').value,
+            avatarName: document.getElementById('characterAvatarName').value.trim(),
+            emoji: document.getElementById('characterEmoji').value || '👤',
             qualities: document.getElementById('characterQualities').value.trim(),
             flaws: document.getElementById('characterFlaws').value.trim(),
             description: document.getElementById('characterDescription').value.trim()

@@ -9,15 +9,11 @@ const Storage = {
 
     async getBooks() {
         try {
-            if (!currentUser) return [];
-            const snapshot = await db.collection('books')
-                .where('userId', '==', currentUser.uid)
-                .get();
+            const snapshot = await db.collection('books').get();
             const books = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            // Sort locally instead of using Firestore orderBy (avoids index requirement)
             return books.sort((a, b) => {
                 const dateA = a.createdAt?.toDate?.() || new Date(0);
                 const dateB = b.createdAt?.toDate?.() || new Date(0);
@@ -46,7 +42,6 @@ const Storage = {
         try {
             const docRef = await db.collection('books').add({
                 ...bookData,
-                userId: currentUser.uid,
                 summary: '',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -112,15 +107,11 @@ const Storage = {
 
     async getRecords() {
         try {
-            if (!currentUser) return [];
-            const snapshot = await db.collection('records')
-                .where('userId', '==', currentUser.uid)
-                .get();
+            const snapshot = await db.collection('records').get();
             const records = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            // Sort locally by date descending
             return records.sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (error) {
             console.error('Erro ao buscar registros:', error);
@@ -148,7 +139,6 @@ const Storage = {
         try {
             const docRef = await db.collection('records').add({
                 ...recordData,
-                userId: currentUser.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...recordData };
@@ -164,6 +154,19 @@ const Storage = {
             return true;
         } catch (error) {
             console.error('Erro ao excluir registro:', error);
+            throw error;
+        }
+    },
+
+    async updateRecord(recordId, recordData) {
+        try {
+            await db.collection('records').doc(recordId).update({
+                ...recordData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return { id: recordId, ...recordData };
+        } catch (error) {
+            console.error('Erro ao atualizar registro:', error);
             throw error;
         }
     },
@@ -196,7 +199,6 @@ const Storage = {
         try {
             const docRef = await db.collection('characters').add({
                 ...characterData,
-                userId: currentUser.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...characterData };
@@ -257,7 +259,6 @@ const Storage = {
         try {
             const docRef = await db.collection('scenarios').add({
                 ...scenarioData,
-                userId: currentUser.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...scenarioData };
@@ -314,7 +315,6 @@ const Storage = {
         try {
             const docRef = await db.collection('chapters').add({
                 ...chapterData,
-                userId: currentUser.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...chapterData };
