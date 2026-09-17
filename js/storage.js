@@ -3,13 +3,23 @@
 // ========================================
 
 const Storage = {
+    // Current user ID
+    userId: null,
+
+    setUserId(userId) {
+        this.userId = userId;
+    },
+
     // ========================================
     // BOOKS COLLECTION
     // ========================================
 
     async getBooks() {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
-            const snapshot = await db.collection('books').get();
+            const snapshot = await db.collection('books')
+                .where('userId', '==', this.userId)
+                .get();
             const books = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -39,9 +49,11 @@ const Storage = {
     },
 
     async createBook(bookData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
             const docRef = await db.collection('books').add({
                 ...bookData,
+                userId: this.userId,
                 summary: '',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -106,8 +118,11 @@ const Storage = {
     // ========================================
 
     async getRecords() {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
-            const snapshot = await db.collection('records').get();
+            const snapshot = await db.collection('records')
+                .where('userId', '==', this.userId)
+                .get();
             const records = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -136,9 +151,11 @@ const Storage = {
     },
 
     async createRecord(recordData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
             const docRef = await db.collection('records').add({
                 ...recordData,
+                userId: this.userId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...recordData };
@@ -196,9 +213,11 @@ const Storage = {
     },
 
     async createCharacter(characterData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
             const docRef = await db.collection('characters').add({
                 ...characterData,
+                userId: this.userId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...characterData };
@@ -256,9 +275,11 @@ const Storage = {
     },
 
     async createScenario(scenarioData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
             const docRef = await db.collection('scenarios').add({
                 ...scenarioData,
+                userId: this.userId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...scenarioData };
@@ -304,7 +325,14 @@ const Storage = {
                 id: doc.id,
                 ...doc.data()
             }));
-            return chapters.sort((a, b) => a.number - b.number);
+            return chapters.sort((a, b) => {
+                // Sort by type first (prologue, chapters, epilogue, extra)
+                const typeOrder = { 'prologue': 0, 'chapter': 1, 'epilogue': 2, 'extra': 3 };
+                const typeA = typeOrder[a.type || 'chapter'] || 1;
+                const typeB = typeOrder[b.type || 'chapter'] || 1;
+                if (typeA !== typeB) return typeA - typeB;
+                return (a.number || 0) - (b.number || 0);
+            });
         } catch (error) {
             console.error('Erro ao buscar capítulos:', error);
             throw error;
@@ -312,9 +340,11 @@ const Storage = {
     },
 
     async createChapter(chapterData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
         try {
             const docRef = await db.collection('chapters').add({
                 ...chapterData,
+                userId: this.userId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { id: docRef.id, ...chapterData };
@@ -441,14 +471,33 @@ const Storage = {
     },
 
     getStatusIcon(status) {
-        const icons = {
-            'not_written': '⬜',
-            'writing': '✏️',
-            'written': '✅',
-            'revised': '💜',
-            'rewrite': '🔄'
+        return '';
+    },
+    
+    getChapterTypeLabel(type) {
+        const labels = {
+            'chapter': 'Capítulo',
+            'prologue': 'Prólogo',
+            'epilogue': 'Epílogo',
+            'extra': 'Cena Extra'
         };
-        return icons[status] || '⬜';
+        return labels[type] || 'Capítulo';
+    },
+    
+    getChapterDisplayNumber(chapter) {
+        const type = chapter.type || 'chapter';
+        if (type === 'prologue') return 'P';
+        if (type === 'epilogue') return 'E';
+        if (type === 'extra') return '★';
+        return chapter.number || '-';
+    },
+    
+    getChapterDisplayName(chapter) {
+        const type = chapter.type || 'chapter';
+        if (type === 'prologue') return chapter.title ? `Prólogo: ${chapter.title}` : 'Prólogo';
+        if (type === 'epilogue') return chapter.title ? `Epílogo: ${chapter.title}` : 'Epílogo';
+        if (type === 'extra') return chapter.title ? `Extra: ${chapter.title}` : 'Cena Extra';
+        return chapter.title ? `Cap. ${chapter.number}: ${chapter.title}` : `Capítulo ${chapter.number}`;
     }
 };
 

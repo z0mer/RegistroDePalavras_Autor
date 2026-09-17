@@ -25,11 +25,36 @@ const App = {
     async init() {
         console.log('🚀 Inicializando aplicação...');
         
-        // Setup theme toggle
-        document.getElementById('btnToggleTheme').addEventListener('click', () => this.toggleTheme());
-        
-        // Load saved theme
+        // Load saved theme first (before auth check)
         this.loadTheme();
+        
+        // Initialize Lucide icons for login screen
+        lucide.createIcons();
+        
+        // Setup login button
+        document.getElementById('btnGoogleLogin')?.addEventListener('click', () => this.handleLogin());
+        
+        // Wait for auth state
+        const user = await Auth.init();
+        
+        if (!user) {
+            console.log('⏳ Aguardando login...');
+            return;
+        }
+        
+        // User is logged in, initialize app
+        await this.initApp();
+    },
+
+    async initApp() {
+        console.log('📱 Inicializando interface...');
+        
+        // Setup theme toggle
+        document.getElementById('btnToggleTheme')?.addEventListener('click', () => this.toggleTheme());
+        document.getElementById('btnToggleThemeMobile')?.addEventListener('click', () => this.toggleTheme());
+        
+        // Setup logout
+        document.getElementById('btnLogout')?.addEventListener('click', () => this.handleLogout());
         
         // Setup app
         this.setupNavigation();
@@ -42,13 +67,50 @@ const App = {
         this.initCharts();
 
         document.getElementById('recordDate').value = Storage.getDateString();
+        
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
         console.log('✅ Aplicação inicializada!');
+    },
+
+    async handleLogin() {
+        const btn = document.getElementById('btnGoogleLogin');
+        const originalText = btn.innerHTML;
+        
+        try {
+            btn.innerHTML = '<span class="loading-spinner"></span> Entrando...';
+            btn.disabled = true;
+            
+            await Auth.signInWithGoogle();
+            
+            // Auth state listener will handle the rest
+            await this.initApp();
+            
+        } catch (error) {
+            console.error('Erro no login:', error);
+            this.showToast(error.message, 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    },
+
+    async handleLogout() {
+        if (confirm('Tem certeza que deseja sair?')) {
+            try {
+                await Auth.signOut();
+                // Auth state listener will show login screen
+                window.location.reload();
+            } catch (error) {
+                this.showToast('Erro ao sair. Tente novamente.', 'error');
+            }
+        }
     },
 
     loadTheme() {
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('btnToggleTheme').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        this.updateThemeIcon(savedTheme);
     },
 
     toggleTheme() {
@@ -56,7 +118,21 @@ const App = {
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        document.getElementById('btnToggleTheme').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        this.updateThemeIcon(newTheme);
+    },
+    
+    updateThemeIcon(theme) {
+        const iconElement = document.querySelector('#btnToggleTheme i');
+        const iconElementMobile = document.querySelector('#btnToggleThemeMobile i');
+        const iconName = theme === 'dark' ? 'moon' : 'sun';
+        
+        if (iconElement) {
+            iconElement.setAttribute('data-lucide', iconName);
+        }
+        if (iconElementMobile) {
+            iconElementMobile.setAttribute('data-lucide', iconName);
+        }
+        lucide.createIcons();
     },
 
     // ========================================
@@ -166,10 +242,11 @@ const App = {
         if (recentRecords.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <span class="empty-icon">📝</span>
+                    <i data-lucide="file-text" class="empty-icon"></i>
                     <p>Nenhum registro ainda. Comece a escrever!</p>
                 </div>
             `;
+            lucide.createIcons();
             return;
         }
 
@@ -178,7 +255,7 @@ const App = {
             return `
                 <div class="record-item" data-id="${record.id}">
                     <div class="record-info">
-                        <div class="record-color" style="background: ${book?.color || '#8b5cf6'}"></div>
+                        <div class="record-color" style="background: ${book?.color || '#84b6f4'}"></div>
                         <div class="record-details">
                             <h4>${book?.title || 'Livro removido'}</h4>
                             <p>${Storage.formatDate(record.date)}${record.notes ? ' • ' + record.notes : ''}</p>
@@ -186,12 +263,13 @@ const App = {
                     </div>
                     <div class="record-words">${Storage.formatWords(record.words)}</div>
                     <div class="record-actions">
-                        <button class="btn-icon" onclick="App.editRecord('${record.id}')" title="Editar">✏️</button>
-                        <button class="btn-icon" onclick="App.deleteRecord('${record.id}')" title="Excluir">🗑️</button>
+                        <button class="btn-icon" onclick="App.editRecord('${record.id}')" title="Editar"><i data-lucide="pencil"></i></button>
+                        <button class="btn-icon" onclick="App.deleteRecord('${record.id}')" title="Excluir"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
             `;
         }).join('');
+        lucide.createIcons();
     },
 
     // ========================================
@@ -219,12 +297,12 @@ const App = {
                 datasets: [{
                     label: 'Palavras',
                     data: [],
-                    borderColor: '#8b5cf6',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderColor: '#84b6f4',
+                    backgroundColor: 'rgba(132, 182, 244, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#8b5cf6',
+                    pointBackgroundColor: '#84b6f4',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
@@ -323,12 +401,12 @@ const App = {
                 datasets: [{
                     label: 'Palavras',
                     data: [],
-                    borderColor: '#8b5cf6',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderColor: '#84b6f4',
+                    backgroundColor: 'rgba(132, 182, 244, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#8b5cf6',
+                    pointBackgroundColor: '#84b6f4',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 4
@@ -370,11 +448,12 @@ const App = {
         if (this.books.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <span class="empty-icon">📚</span>
+                    <i data-lucide="library" class="empty-icon"></i>
                     <p>Nenhum livro cadastrado ainda.</p>
                     <button class="btn-primary" onclick="App.openBookModal()">Criar Primeiro Livro</button>
                 </div>
             `;
+            lucide.createIcons();
             return;
         }
 
@@ -385,7 +464,7 @@ const App = {
             return `
                 <div class="book-card" onclick="App.openBookDetails('${book.id}')">
                     <div class="book-cover" style="background: linear-gradient(135deg, ${book.color} 0%, ${this.darkenColor(book.color)} 100%)">
-                        <span class="book-emoji">📖</span>
+                        <span class="book-emoji">${book.emoji || '📖'}</span>
                     </div>
                     <div class="book-card-content">
                         <h3>${this.escapeHtml(book.title)}</h3>
@@ -425,9 +504,13 @@ const App = {
         // Get book records
         const bookRecords = this.records.filter(r => r.bookId === bookId);
         
+        // Count written chapters (status = 'written' or 'revised')
+        const writtenChapters = this.chapters.filter(c => c.status === 'written' || c.status === 'revised').length;
+        
         // Update stats
         document.getElementById('bookTotalWords').textContent = Storage.formatWords(Storage.calculateTotalWords(bookRecords));
         document.getElementById('bookTotalRecords').textContent = bookRecords.length;
+        document.getElementById('bookWrittenChapters').textContent = writtenChapters;
 
         // Render all tabs
         this.renderBookRecords(bookRecords);
@@ -445,6 +528,7 @@ const App = {
         document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === 0));
 
         this.navigateTo('bookDetails');
+        lucide.createIcons();
     },
 
     renderBookRecords(records) {
@@ -455,22 +539,35 @@ const App = {
             return;
         }
 
-        container.innerHTML = records.map(record => `
-            <div class="record-item" data-id="${record.id}">
-                <div class="record-info">
-                    <div class="record-color" style="background: ${this.currentBook?.color || '#8b5cf6'}"></div>
-                    <div class="record-details">
-                        <h4>${Storage.formatDate(record.date)}</h4>
-                        <p>${record.notes || 'Sem notas'}</p>
+        container.innerHTML = records.map(record => {
+            // Find chapter name if exists
+            let chapterInfo = '';
+            if (record.chapterId) {
+                const chapter = this.chapters.find(c => c.id === record.chapterId);
+                if (chapter) {
+                    chapterInfo = Storage.getChapterDisplayName(chapter);
+                }
+            }
+            const subtitle = chapterInfo || record.notes || '';
+            
+            return `
+                <div class="record-item" data-id="${record.id}">
+                    <div class="record-info">
+                        <div class="record-color" style="background: ${this.currentBook?.color || '#84b6f4'}"></div>
+                        <div class="record-details">
+                            <h4>${Storage.formatDate(record.date)}</h4>
+                            <p>${subtitle || 'Sem capítulo'}</p>
+                        </div>
+                    </div>
+                    <div class="record-words">${Storage.formatWords(record.words)}</div>
+                    <div class="record-actions">
+                        <button class="btn-icon" onclick="event.stopPropagation(); App.editRecord('${record.id}')" title="Editar"><i data-lucide="pencil"></i></button>
+                        <button class="btn-icon" onclick="event.stopPropagation(); App.deleteRecord('${record.id}')" title="Excluir"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
-                <div class="record-words">${Storage.formatWords(record.words)}</div>
-                <div class="record-actions">
-                    <button class="btn-icon" onclick="event.stopPropagation(); App.editRecord('${record.id}')" title="Editar">✏️</button>
-                    <button class="btn-icon" onclick="event.stopPropagation(); App.deleteRecord('${record.id}')" title="Excluir">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+        lucide.createIcons();
     },
 
     // ========================================
@@ -483,15 +580,16 @@ const App = {
         if (this.characters.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <span class="empty-icon">👥</span>
+                    <i data-lucide="users" class="empty-icon"></i>
                     <p>Nenhum personagem cadastrado.</p>
                 </div>
             `;
+            lucide.createIcons();
             return;
         }
 
         container.innerHTML = this.characters.map(char => `
-            <div class="character-card">
+            <div class="character-card" data-id="${char.id}">
                 <div class="character-header">
                     <div class="character-avatar">
                         ${char.emoji || '👤'}
@@ -500,19 +598,29 @@ const App = {
                         <h4>${this.escapeHtml(char.name)}</h4>
                         ${char.avatarName ? `<span class="avatar-name">${this.escapeHtml(char.avatarName)}</span>` : ''}
                         ${char.age || char.gender ? `<span>${[char.age, char.gender].filter(Boolean).join(' • ')}</span>` : ''}
+                        ${char.profession ? `<span class="profession">${this.escapeHtml(char.profession)}</span>` : ''}
                     </div>
                     <div class="character-actions">
-                        <button class="btn-icon" onclick="App.editCharacter('${char.id}')" title="Editar">✏️</button>
-                        <button class="btn-icon btn-danger" onclick="App.deleteCharacter('${char.id}')" title="Excluir">🗑️</button>
+                        <button class="btn-icon" onclick="App.editCharacter('${char.id}')" title="Editar">
+                            <i data-lucide="pencil"></i>
+                        </button>
+                        <button class="btn-icon" onclick="App.deleteCharacter('${char.id}')" title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                        <button class="btn-icon btn-expand" onclick="App.toggleCharacterExpand('${char.id}')" title="Expandir">
+                            <i data-lucide="chevron-down"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="character-traits">
+                <div class="character-traits collapsed">
+                    ${char.appearance ? `<div class="trait"><strong>Aparência</strong><p>${this.escapeHtml(char.appearance)}</p></div>` : ''}
+                    ${char.personality ? `<div class="trait"><strong>Personalidade</strong><p>${this.escapeHtml(char.personality)}</p></div>` : ''}
                     ${char.qualities ? `<div class="trait"><strong>Qualidades</strong><p>${this.escapeHtml(char.qualities)}</p></div>` : ''}
                     ${char.flaws ? `<div class="trait"><strong>Defeitos</strong><p>${this.escapeHtml(char.flaws)}</p></div>` : ''}
-                    ${char.description ? `<div class="trait"><strong>Descrição</strong><p>${this.escapeHtml(char.description)}</p></div>` : ''}
                 </div>
             </div>
         `).join('');
+        lucide.createIcons();
     },
 
     // ========================================
@@ -526,12 +634,13 @@ const App = {
         if (!this.currentBook?.summary) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <span class="empty-icon">📝</span>
+                    <i data-lucide="file-text" class="empty-icon"></i>
                     <p>Nenhum resumo adicionado.</p>
                     <button class="btn-primary" onclick="App.openSummaryModal()">Adicionar Resumo</button>
                 </div>
             `;
             btnEdit.style.display = 'none';
+            lucide.createIcons();
             return;
         }
 
@@ -549,25 +658,31 @@ const App = {
         if (this.scenarios.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <span class="empty-icon">🌍</span>
+                    <i data-lucide="map-pin" class="empty-icon"></i>
                     <p>Nenhum cenário cadastrado.</p>
                 </div>
             `;
+            lucide.createIcons();
             return;
         }
 
         container.innerHTML = this.scenarios.map(scenario => `
             <div class="scenario-card">
                 <div class="scenario-header">
-                    <h4>${this.escapeHtml(scenario.name)}</h4>
+                    <h4><i data-lucide="map-pin"></i> ${this.escapeHtml(scenario.name)}</h4>
                     <div class="character-actions">
-                        <button class="btn-icon" onclick="App.editScenario('${scenario.id}')" title="Editar">✏️</button>
-                        <button class="btn-icon btn-danger" onclick="App.deleteScenario('${scenario.id}')" title="Excluir">🗑️</button>
+                        <button class="btn-icon" onclick="App.editScenario('${scenario.id}')" title="Editar">
+                            <i data-lucide="pencil"></i>
+                        </button>
+                        <button class="btn-icon" onclick="App.deleteScenario('${scenario.id}')" title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
                     </div>
                 </div>
                 ${scenario.description ? `<p class="scenario-description">${this.escapeHtml(scenario.description)}</p>` : ''}
             </div>
         `).join('');
+        lucide.createIcons();
     },
 
     // ========================================
@@ -596,9 +711,12 @@ const App = {
             const chapterRecords = bookRecords.filter(r => r.chapterId === chapter.id);
             const chapterWords = chapterRecords.reduce((sum, r) => sum + (r.words || 0), 0);
             
+            // Display name based on type
+            const displayNumber = Storage.getChapterDisplayNumber(chapter);
+            
             return `
                 <tr>
-                    <td class="chapter-number">${chapter.number}</td>
+                    <td class="chapter-number">${displayNumber}</td>
                     <td class="chapter-title">${chapter.title ? this.escapeHtml(chapter.title) : '-'}</td>
                     <td class="chapter-words">${chapterWords > 0 ? Storage.formatWords(chapterWords) : '-'}</td>
                     <td class="chapter-status">
@@ -607,12 +725,17 @@ const App = {
                         </span>
                     </td>
                     <td class="chapter-actions">
-                        <button class="btn-icon" onclick="App.editChapter('${chapter.id}')" title="Editar">✏️</button>
-                        <button class="btn-icon btn-danger" onclick="App.deleteChapter('${chapter.id}')" title="Excluir">🗑️</button>
+                        <button class="btn-icon" onclick="App.editChapter('${chapter.id}')" title="Editar">
+                            <i data-lucide="pencil"></i>
+                        </button>
+                        <button class="btn-icon" onclick="App.deleteChapter('${chapter.id}')" title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
                     </td>
                 </tr>
             `;
         }).join('');
+        lucide.createIcons();
     },
 
     // ========================================
@@ -649,18 +772,10 @@ const App = {
         // Color picker
         document.querySelectorAll('.color-option').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
+                const parent = btn.closest('form');
+                parent.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById('bookColor').value = btn.dataset.color;
-            });
-        });
-        
-        // Emoji picker
-        document.querySelectorAll('.emoji-option').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.emoji-option').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('characterEmoji').value = btn.dataset.emoji;
+                parent.querySelector('input[id$="Color"]').value = btn.dataset.color;
             });
         });
 
@@ -697,18 +812,21 @@ const App = {
                 document.getElementById('bookTitle').value = book.title;
                 document.getElementById('bookAuthor').value = book.author;
                 document.getElementById('bookColor').value = book.color;
+                document.getElementById('bookEmoji').value = book.emoji || '📖';
 
-                document.querySelectorAll('.color-option').forEach(btn => {
+                document.querySelectorAll('#formBook .color-option').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.color === book.color);
                 });
             }
         } else {
             title.textContent = 'Novo Livro';
-            document.querySelectorAll('.color-option').forEach((btn, i) => btn.classList.toggle('active', i === 0));
-            document.getElementById('bookColor').value = '#8b5cf6';
+            document.querySelectorAll('#formBook .color-option').forEach((btn, i) => btn.classList.toggle('active', i === 0));
+            document.getElementById('bookColor').value = '#84b6f4';
+            document.getElementById('bookEmoji').value = '📖';
         }
 
         this.openModal('modalNewBook');
+        lucide.createIcons();
     },
 
     openRecordModal(bookId = null, recordId = null) {
@@ -764,10 +882,19 @@ const App = {
         
         try {
             const chapters = await Storage.getChaptersByBook(bookId);
+            // Sort chapters: prologue, chapters, epilogue, extras
+            chapters.sort((a, b) => {
+                const order = { prologue: 0, chapter: 1, epilogue: 2, extra: 3 };
+                const typeA = order[a.type || 'chapter'];
+                const typeB = order[b.type || 'chapter'];
+                if (typeA !== typeB) return typeA - typeB;
+                return (a.number || 0) - (b.number || 0);
+            });
+            
             chapters.forEach(chapter => {
                 const option = document.createElement('option');
                 option.value = chapter.id;
-                option.textContent = `Cap. ${chapter.number}${chapter.title ? ': ' + chapter.title : ''}`;
+                option.textContent = Storage.getChapterDisplayName(chapter);
                 select.appendChild(option);
             });
         } catch (error) {
@@ -782,11 +909,6 @@ const App = {
         form.reset();
         document.getElementById('characterId').value = '';
         document.getElementById('characterEmoji').value = '👤';
-        
-        // Reset emoji picker
-        document.querySelectorAll('.emoji-option').forEach((btn, i) => {
-            btn.classList.toggle('active', i === 0);
-        });
 
         if (characterId) {
             const char = this.characters.find(c => c.id === characterId);
@@ -796,22 +918,20 @@ const App = {
                 document.getElementById('characterName').value = char.name;
                 document.getElementById('characterAge').value = char.age || '';
                 document.getElementById('characterGender').value = char.gender || '';
+                document.getElementById('characterProfession').value = char.profession || '';
                 document.getElementById('characterAvatarName').value = char.avatarName || '';
                 document.getElementById('characterEmoji').value = char.emoji || '👤';
+                document.getElementById('characterAppearance').value = char.appearance || '';
+                document.getElementById('characterPersonality').value = char.personality || '';
                 document.getElementById('characterQualities').value = char.qualities || '';
                 document.getElementById('characterFlaws').value = char.flaws || '';
-                document.getElementById('characterDescription').value = char.description || '';
-                
-                // Set active emoji
-                document.querySelectorAll('.emoji-option').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.emoji === (char.emoji || '👤'));
-                });
             }
         } else {
             title.textContent = 'Novo Personagem';
         }
 
         this.openModal('modalCharacter');
+        lucide.createIcons();
     },
 
     openSummaryModal() {
@@ -844,29 +964,64 @@ const App = {
     openChapterModal(chapterId = null) {
         const form = document.getElementById('formChapter');
         const title = document.getElementById('modalChapterTitle');
+        const numberRow = document.getElementById('chapterNumberRow');
+        const typeSelect = document.getElementById('chapterType');
 
         form.reset();
         document.getElementById('chapterId').value = '';
+        
+        // Setup type change handler
+        typeSelect.onchange = () => {
+            const isChapter = typeSelect.value === 'chapter';
+            numberRow.querySelector('div:first-child').style.display = isChapter ? 'block' : 'none';
+        };
 
         if (chapterId) {
             const chapter = this.chapters.find(c => c.id === chapterId);
             if (chapter) {
                 title.textContent = 'Editar Capítulo';
                 document.getElementById('chapterId').value = chapter.id;
-                document.getElementById('chapterNumber').value = chapter.number;
+                document.getElementById('chapterType').value = chapter.type || 'chapter';
+                document.getElementById('chapterNumber').value = chapter.number || '';
                 document.getElementById('chapterTitle').value = chapter.title || '';
                 document.getElementById('chapterStatus').value = chapter.status;
+                
+                // Show/hide number based on type
+                const isChapter = (chapter.type || 'chapter') === 'chapter';
+                numberRow.querySelector('div:first-child').style.display = isChapter ? 'block' : 'none';
             }
         } else {
             title.textContent = 'Novo Capítulo';
-            document.getElementById('chapterNumber').value = this.chapters.length + 1;
+            document.getElementById('chapterType').value = 'chapter';
+            // Count existing chapters of type 'chapter' to suggest next number
+            const chapterCount = this.chapters.filter(c => !c.type || c.type === 'chapter').length;
+            document.getElementById('chapterNumber').value = chapterCount + 1;
             document.getElementById('chapterStatus').value = 'not_written';
+            numberRow.querySelector('div:first-child').style.display = 'block';
         }
 
         this.openModal('modalChapter');
+        lucide.createIcons();
     },
 
     editCharacter(id) { this.openCharacterModal(id); },
+    
+    toggleCharacterExpand(id) {
+        const card = document.querySelector(`.character-card[data-id="${id}"]`);
+        if (card) {
+            const traits = card.querySelector('.character-traits');
+            const expandBtn = card.querySelector('.btn-expand');
+            traits.classList.toggle('collapsed');
+            
+            // Rotate the chevron icon
+            if (traits.classList.contains('collapsed')) {
+                expandBtn.style.transform = 'rotate(0deg)';
+            } else {
+                expandBtn.style.transform = 'rotate(180deg)';
+            }
+        }
+    },
+
     editScenario(id) { this.openScenarioModal(id); },
     editChapter(id) { this.openChapterModal(id); },
 
@@ -997,7 +1152,8 @@ const App = {
         const bookData = {
             title: document.getElementById('bookTitle').value.trim(),
             author: document.getElementById('bookAuthor').value.trim(),
-            color: document.getElementById('bookColor').value
+            color: document.getElementById('bookColor').value,
+            emoji: document.getElementById('bookEmoji').value || '📖'
         };
 
         try {
@@ -1055,11 +1211,13 @@ const App = {
             name: document.getElementById('characterName').value.trim(),
             age: document.getElementById('characterAge').value.trim(),
             gender: document.getElementById('characterGender').value,
+            profession: document.getElementById('characterProfession').value.trim(),
             avatarName: document.getElementById('characterAvatarName').value.trim(),
             emoji: document.getElementById('characterEmoji').value || '👤',
+            appearance: document.getElementById('characterAppearance').value.trim(),
+            personality: document.getElementById('characterPersonality').value.trim(),
             qualities: document.getElementById('characterQualities').value.trim(),
-            flaws: document.getElementById('characterFlaws').value.trim(),
-            description: document.getElementById('characterDescription').value.trim()
+            flaws: document.getElementById('characterFlaws').value.trim()
         };
 
         try {
@@ -1128,9 +1286,11 @@ const App = {
 
     async saveChapter() {
         const chapterId = document.getElementById('chapterId').value;
+        const chapterType = document.getElementById('chapterType').value;
         const chapterData = {
             bookId: this.currentBookId,
-            number: parseInt(document.getElementById('chapterNumber').value),
+            type: chapterType,
+            number: chapterType === 'chapter' ? parseInt(document.getElementById('chapterNumber').value) || null : null,
             title: document.getElementById('chapterTitle').value.trim(),
             status: document.getElementById('chapterStatus').value
         };
@@ -1144,12 +1304,23 @@ const App = {
             } else {
                 const newChapter = await Storage.createChapter(chapterData);
                 this.chapters.push(newChapter);
-                this.chapters.sort((a, b) => a.number - b.number);
+                // Sort: prologue first, then chapters by number, then epilogue, then extras
+                this.chapters.sort((a, b) => {
+                    const order = { prologue: 0, chapter: 1, epilogue: 2, extra: 3 };
+                    const typeA = order[a.type || 'chapter'];
+                    const typeB = order[b.type || 'chapter'];
+                    if (typeA !== typeB) return typeA - typeB;
+                    return (a.number || 0) - (b.number || 0);
+                });
                 this.showToast('Capítulo criado!', 'success');
             }
 
             this.renderChapters();
             this.closeAllModals();
+            
+            // Update written chapters count
+            const writtenChapters = this.chapters.filter(c => c.status === 'written' || c.status === 'revised').length;
+            document.getElementById('bookWrittenChapters').textContent = writtenChapters;
         } catch (error) {
             this.showToast('Erro ao salvar capítulo.', 'error');
         }

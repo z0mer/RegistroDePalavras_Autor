@@ -4,15 +4,16 @@
 
 // Theme Variables (Dark - Default)
 :root {
-    --bg-primary: #0f0f1a;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #252542;
-    --accent-primary: #8b5cf6;
-    --accent-secondary: #a78bfa;
+    --bg-primary: #0a0f1a;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --accent-primary: #84b6f4;
+    --accent-secondary: #a8cbf7;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
     --border-color: rgba(255, 255, 255, 0.1);
+    --icon-color: #DCECF7;
 }
 
 // Light Theme
@@ -20,12 +21,13 @@
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
     --bg-tertiary: #e2e8f0;
-    --accent-primary: #7c3aed;
-    --accent-secondary: #8b5cf6;
+    --accent-primary: #5a9be8;
+    --accent-secondary: #84b6f4;
     --text-primary: #1e293b;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --border-color: rgba(0, 0, 0, 0.1);
+    --icon-color: #1F2A44;
 }
 
 // Variables using CSS custom properties
@@ -39,8 +41,10 @@ $text-secondary: var(--text-secondary);
 $text-muted: var(--text-muted);
 $border-color: var(--border-color);
 
+$icon-color: var(--icon-color);
+
 // Static variables
-$accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+$accent-gradient: linear-gradient(135deg, #84b6f4 0%, #a8cbf7 100%);
 $shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
 $shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
 $shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -78,6 +82,14 @@ body {
     line-height: 1.6;
 }
 
+// Lucide Icons default style
+svg[data-lucide] {
+    width: 1em;
+    height: 1em;
+    stroke-width: 2;
+    color: $icon-color;
+}
+
 // ========================================
 // LOGIN SCREEN
 // ========================================
@@ -95,9 +107,15 @@ body {
     text-align: center;
     max-width: 400px;
     width: 100%;
+}
+
+.login-logo {
+    margin-bottom: 32px;
     
-    .login-logo {
-        font-size: 4rem;
+    .login-logo-icon {
+        width: 64px;
+        height: 64px;
+        color: $accent-primary;
         margin-bottom: 16px;
     }
     
@@ -110,7 +128,7 @@ body {
     
     p {
         color: $text-secondary;
-        margin-bottom: 32px;
+        font-size: 1rem;
     }
 }
 
@@ -128,6 +146,8 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: $transition;
+    width: 100%;
+    max-width: 280px;
     
     &:hover {
         background: #f5f5f5;
@@ -135,9 +155,34 @@ body {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
     svg {
         flex-shrink: 0;
     }
+}
+
+.login-footer {
+    margin-top: 24px;
+    font-size: 0.85rem;
+    color: $text-muted;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .btn-theme {
@@ -154,8 +199,8 @@ body {
     transition: $transition;
     
     &:hover {
-        background: rgba(139, 92, 246, 0.1);
-        border-color: #8b5cf6;
+        background: rgba(132, 182, 244, 0.1);
+        border-color: #84b6f4;
     }
 }
 
@@ -263,7 +308,9 @@ body {
 }
 
 .logo-icon {
-    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: $accent-primary;
 }
 
 .logo-text {
@@ -309,12 +356,66 @@ body {
 }
 
 .nav-icon {
-    font-size: 1.25rem;
+    width: 20px;
+    height: 20px;
 }
 
 .sidebar-footer {
     padding: 16px;
     border-top: 1px solid $border-color;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: $bg-tertiary;
+    border-radius: $radius-md;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-name {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: $text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-logout {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: $radius-sm;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: $transition;
+    
+    &:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    i, svg {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 .btn-new-record {
@@ -323,7 +424,7 @@ body {
     background: $accent-gradient;
     border: none;
     border-radius: $radius-md;
-    color: white;
+    color: #1F2A44;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -338,8 +439,8 @@ body {
         box-shadow: 0 4px 20px rgba($accent-primary, 0.4);
     }
     
-    span {
-        font-size: 1.25rem;
+    i, svg {
+        color: #1F2A44;
     }
 }
 
@@ -456,10 +557,18 @@ body {
 }
 
 .stat-icon {
-    font-size: 2rem;
+    width: 32px;
+    height: 32px;
+    color: $accent-primary;
+    
+    i, svg {
+        width: 100%;
+        height: 100%;
+    }
     
     @media (max-width: $mobile) {
-        font-size: 1.5rem;
+        width: 24px;
+        height: 24px;
     }
 }
 
@@ -537,7 +646,7 @@ body {
     &.active {
         background: $accent-primary;
         border-color: $accent-primary;
-        color: white;
+        color: #1F2A44;
     }
 }
 
@@ -645,10 +754,12 @@ body {
     color: $text-secondary;
     
     .empty-icon {
-        font-size: 3rem;
+        width: 48px;
+        height: 48px;
         display: block;
-        margin-bottom: 16px;
+        margin: 0 auto 16px;
         opacity: 0.5;
+        color: $accent-primary;
     }
     
     p {
@@ -761,6 +872,14 @@ body {
     padding: 8px 0;
     transition: $transition;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    i, svg {
+        width: 16px;
+        height: 16px;
+    }
     
     &:hover {
         color: $accent-primary;
@@ -800,6 +919,12 @@ body {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    
+    .btn-icon {
+        svg {
+            color: var(--icon-color);
+        }
+    }
 }
 
 // ========================================
@@ -850,11 +975,12 @@ body {
     
     &.active {
         background: $accent-primary;
-        color: white;
+        color: #1F2A44;
     }
     
     .tab-icon {
-        font-size: 1.1rem;
+        width: 18px;
+        height: 18px;
     }
     
     @media (max-width: $mobile) {
@@ -866,7 +992,8 @@ body {
         }
         
         .tab-icon {
-            font-size: 1.25rem;
+            width: 20px;
+            height: 20px;
         }
     }
 }
@@ -966,7 +1093,7 @@ body {
 
 .characters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 16px;
 }
 
@@ -984,7 +1111,7 @@ body {
 
 .character-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     margin-bottom: 16px;
 }
@@ -992,6 +1119,7 @@ body {
 .character-avatar {
     width: 60px;
     height: 60px;
+    min-width: 60px;
     border-radius: 50%;
     background: $bg-tertiary;
     display: flex;
@@ -1029,11 +1157,53 @@ body {
         color: $text-secondary;
         display: block;
     }
+    
+    .profession {
+        color: $accent-secondary;
+        font-style: italic;
+    }
 }
 
 .character-actions {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
+    
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--icon-color);
+        }
+        
+        &.btn-danger svg {
+            color: var(--icon-color);
+        }
+        
+        &.btn-expand {
+            transition: transform 0.3s ease;
+        }
+    }
+}
+
+.character-traits {
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    overflow: hidden;
+    
+    &.collapsed {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    
+    &:not(.collapsed) {
+        max-height: 1000px;
+        opacity: 1;
+    }
 }
 
 .emoji-picker {
@@ -1064,8 +1234,8 @@ body {
     
     &:focus {
         outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        border-color: #84b6f4;
+        box-shadow: 0 0 0 3px rgba(132, 182, 244, 0.2);
     }
 }
 
@@ -1088,13 +1258,13 @@ body {
     transition: $transition;
     
     &:hover {
-        border-color: #8b5cf6;
+        border-color: #84b6f4;
         transform: scale(1.1);
     }
     
     &.active {
-        border-color: #8b5cf6;
-        background: rgba(139, 92, 246, 0.2);
+        border-color: #84b6f4;
+        background: rgba(132, 182, 244, 0.2);
     }
 }
 
@@ -1172,8 +1342,10 @@ body {
         align-items: center;
         gap: 8px;
         
-        &::before {
-            content: '📍';
+        i, svg {
+            width: 18px;
+            height: 18px;
+            color: $accent-primary;
         }
     }
 }
@@ -1232,7 +1404,7 @@ body {
     
     .chapter-number {
         font-weight: 600;
-        color: #8b5cf6;
+        color: #84b6f4;
         width: 50px;
     }
     
@@ -1251,8 +1423,23 @@ body {
     }
     
     .chapter-actions {
-        width: 80px;
-        text-align: right;
+        width: 100px;
+        white-space: nowrap;
+        
+        .btn-icon {
+            display: inline-flex;
+            vertical-align: middle;
+            width: 36px;
+            height: 36px;
+            
+            &:first-child {
+                margin-right: 4px;
+            }
+            
+            svg {
+                color: var(--icon-color);
+            }
+        }
     }
 }
 
@@ -1281,8 +1468,8 @@ body {
     }
     
     &.status-revised {
-        background: rgba(139, 92, 246, 0.2);
-        color: #a78bfa;
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
     }
     
     &.status-rewrite {
@@ -1294,15 +1481,44 @@ body {
 @media (max-width: $mobile) {
     .chapters-table {
         th, td {
-            padding: 10px 12px;
+            padding: 10px 8px;
+            font-size: 0.85rem;
+        }
+        
+        .chapter-number {
+            width: 35px;
         }
         
         .chapter-title {
-            max-width: 120px;
+            max-width: 80px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
+        .chapter-words {
+            width: 50px;
+            font-size: 0.8rem;
+        }
+        
+        .chapter-status {
+            width: auto;
+        }
+        
+        .chapter-actions {
+            width: 70px;
+            
+            .btn-icon {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        gap: 4px;
     }
 }
 
@@ -1362,7 +1578,8 @@ body {
 }
 
 .mobile-nav-icon {
-    font-size: 1.25rem;
+    width: 20px;
+    height: 20px;
 }
 
 // ========================================
@@ -1374,7 +1591,7 @@ body {
     background: $accent-gradient;
     border: none;
     border-radius: $radius-md;
-    color: white;
+    color: #1F2A44;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -1391,6 +1608,11 @@ body {
     &.btn-sm {
         padding: 8px 16px;
         font-size: 0.85rem;
+        
+        i, svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 }
 
@@ -1404,10 +1626,14 @@ body {
     border: 1px solid $border-color;
     border-radius: $radius-md;
     color: $text-secondary;
-    font-size: 1.25rem;
     cursor: pointer;
     transition: $transition;
     flex-shrink: 0;
+    
+    i, svg {
+        width: 20px;
+        height: 20px;
+    }
     
     &:hover {
         background: rgba(239, 68, 68, 0.2);
@@ -1434,13 +1660,24 @@ body {
 }
 
 .btn-danger {
+    padding: 12px 24px;
     background: #ef4444;
-    border-color: #ef4444;
+    border: none;
+    border-radius: $radius-md;
     color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     
     &:hover {
         background: #dc2626;
-        border-color: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
     }
 }
 
@@ -1455,16 +1692,34 @@ body {
     border-radius: $radius-sm;
     cursor: pointer;
     transition: $transition;
-    font-size: 1rem;
+    color: var(--icon-color);
+    
+    i, svg {
+        width: 18px;
+        height: 18px;
+        color: inherit;
+        stroke: currentColor;
+    }
     
     &:hover {
         border-color: $accent-primary;
         background: rgba($accent-primary, 0.1);
+        color: $accent-primary;
     }
     
-    &.btn-danger:hover {
-        border-color: #ef4444;
-        background: rgba(#ef4444, 0.1);
+    &.btn-danger {
+        color: var(--icon-color);
+        
+        i, svg {
+            color: inherit;
+            stroke: currentColor;
+        }
+        
+        &:hover {
+            border-color: #ef4444;
+            background: rgba(#ef4444, 0.1);
+            color: #ef4444;
+        }
     }
 }
 
@@ -1683,6 +1938,10 @@ form {
     align-items: center;
     gap: 12px;
     padding-top: 8px;
+    
+    @media (max-width: $mobile) {
+        gap: 8px;
+    }
 }
 
 // ========================================
