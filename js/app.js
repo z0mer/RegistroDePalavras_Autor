@@ -201,6 +201,9 @@ const App = {
             document.getElementById('booksPage').classList.add('active');
         } else if (page === 'bookDetails') {
             document.getElementById('bookDetailsPage').classList.add('active');
+        } else if (page === 'comparison') {
+            document.getElementById('comparisonPage').classList.add('active');
+            this.loadComparisonData();
         }
     },
 
@@ -522,6 +525,22 @@ const App = {
             tabBtnRoyalties.style.display = this.currentBook.isLaunched ? '' : 'none';
         }
 
+        // Disable/enable tabs based on launched status
+        const disabledTabs = ['progress', 'characters', 'summary', 'settings', 'chapters'];
+        disabledTabs.forEach(tabName => {
+            const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            const tabContent = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+            if (tabBtn) {
+                if (this.currentBook.isLaunched) {
+                    tabBtn.classList.add('tab-disabled');
+                    tabBtn.disabled = true;
+                } else {
+                    tabBtn.classList.remove('tab-disabled');
+                    tabBtn.disabled = false;
+                }
+            }
+        });
+
         // Render all tabs
         this.renderBookRecords(bookRecords);
         this.renderCharacters();
@@ -538,9 +557,18 @@ const App = {
         this.initBookChart();
         this.updateBookChart(bookRecords);
 
-        // Reset to first tab
-        document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-        document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === 0));
+        // Reset to appropriate tab (royalties for launched, progress for others)
+        if (this.currentBook.isLaunched) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.tab === 'royalties');
+            });
+            document.querySelectorAll('.tab-content').forEach(c => {
+                c.classList.toggle('active', c.id === 'tabRoyalties');
+            });
+        } else {
+            document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+            document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === 0));
+        }
 
         this.navigateTo('bookDetails');
         lucide.createIcons();
@@ -758,17 +786,55 @@ const App = {
         const tbody = document.getElementById('royaltiesBody');
         const emptyState = document.getElementById('royaltiesEmpty');
         const table = document.querySelector('.royalties-table');
+        const filterSelect = document.getElementById('royaltiesMonthFilter');
 
-        // Update stats
-        const totalKenps = this.royalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
-        const totalOrders = this.royalties.reduce((sum, r) => sum + (r.orders || 0), 0);
-        const totalValue = this.royalties.reduce((sum, r) => sum + (r.value || 0), 0);
+        // Populate month filter options
+        const months = new Set();
+        this.royalties.forEach(r => {
+            const d = new Date(r.date);
+            months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+        });
+
+        const currentFilter = filterSelect.value;
+        const sortedMonths = Array.from(months).sort().reverse();
+        
+        filterSelect.innerHTML = '<option value="all">Todos os meses</option>' +
+            sortedMonths.map(m => {
+                const [year, month] = m.split('-');
+                const label = new Date(year, month - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                return `<option value="${m}">${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
+            }).join('');
+        
+        filterSelect.value = currentFilter || 'all';
+
+        // Setup filter change listener (only once)
+        if (!filterSelect.hasAttribute('data-listener')) {
+            filterSelect.setAttribute('data-listener', 'true');
+            filterSelect.addEventListener('change', () => this.renderRoyalties());
+        }
+
+        // Filter royalties based on selection
+        const selectedMonth = filterSelect.value;
+        let filteredRoyalties = this.royalties;
+        
+        if (selectedMonth !== 'all') {
+            const [year, month] = selectedMonth.split('-');
+            filteredRoyalties = this.royalties.filter(r => {
+                const d = new Date(r.date);
+                return d.getFullYear() === parseInt(year) && d.getMonth() + 1 === parseInt(month);
+            });
+        }
+
+        // Update stats based on filtered data
+        const totalKenps = filteredRoyalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
+        const totalOrders = filteredRoyalties.reduce((sum, r) => sum + (r.orders || 0), 0);
+        const totalValue = filteredRoyalties.reduce((sum, r) => sum + (r.value || 0), 0);
 
         document.getElementById('royaltiesTotalKenps').textContent = totalKenps.toLocaleString('pt-BR');
         document.getElementById('royaltiesTotalOrders').textContent = totalOrders.toLocaleString('pt-BR');
         document.getElementById('royaltiesTotalValue').textContent = `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-        if (this.royalties.length === 0) {
+        if (filteredRoyalties.length === 0) {
             table.style.display = 'none';
             emptyState.style.display = 'block';
             return;
@@ -777,7 +843,7 @@ const App = {
         table.style.display = 'table';
         emptyState.style.display = 'none';
 
-        tbody.innerHTML = this.royalties.map(royalty => {
+        tbody.innerHTML = filteredRoyalties.map(royalty => {
             const formattedDate = new Date(royalty.date + 'T00:00:00').toLocaleDateString('pt-BR');
             const formattedValue = `R$ ${(royalty.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -1470,6 +1536,192 @@ const App = {
         } catch (error) {
             this.showToast('Erro ao salvar royalty.', 'error');
         }
+    },
+
+    // ========================================
+    // COMPARISON PAGE
+    // ========================================
+
+    comparisonChart: null,
+
+    async loadComparisonData() {
+        // Get launched books with royalties
+        const launchedBooks = this.books.filter(b => b.isLaunched);
+        
+        if (launchedBooks.length === 0) {
+            document.getElementById('comparisonSummary').innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">📊</span>
+                    <p>Nenhum livro lançado com royalties registrados.</p>
+                </div>
+            `;
+            if (this.comparisonChart) {
+                this.comparisonChart.destroy();
+                this.comparisonChart = null;
+            }
+            return;
+        }
+
+        // Load royalties for all launched books
+        const booksWithRoyalties = await Promise.all(
+            launchedBooks.map(async (book) => {
+                const royalties = await Storage.getRoyaltiesByBook(book.id);
+                return { ...book, royalties };
+            })
+        );
+
+        this.renderComparisonSummary(booksWithRoyalties);
+        this.updateComparisonChart(booksWithRoyalties);
+
+        // Setup filter listeners
+        document.getElementById('comparisonType').onchange = () => this.updateComparisonChart(booksWithRoyalties);
+        document.getElementById('comparisonPeriod').onchange = () => this.updateComparisonChart(booksWithRoyalties);
+    },
+
+    renderComparisonSummary(booksWithRoyalties) {
+        const container = document.getElementById('comparisonSummary');
+
+        if (booksWithRoyalties.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">📊</span>
+                    <p>Nenhum livro lançado com royalties registrados.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = booksWithRoyalties.map(book => {
+            const totalKenps = book.royalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
+            const totalOrders = book.royalties.reduce((sum, r) => sum + (r.orders || 0), 0);
+            const totalValue = book.royalties.reduce((sum, r) => sum + (r.value || 0), 0);
+
+            return `
+                <div class="comparison-book-card">
+                    <div class="book-header">
+                        <div class="book-emoji" style="background: ${book.color}20;">
+                            ${book.emoji || '📖'}
+                        </div>
+                        <div class="book-info">
+                            <h3>${this.escapeHtml(book.title)}</h3>
+                            <p>${book.royalties.length} registros</p>
+                        </div>
+                    </div>
+                    <div class="book-stats">
+                        <div class="stat">
+                            <span class="value">${totalKenps.toLocaleString('pt-BR')}</span>
+                            <span class="label">KENPs</span>
+                        </div>
+                        <div class="stat">
+                            <span class="value">${totalOrders}</span>
+                            <span class="label">Pedidos</span>
+                        </div>
+                        <div class="stat">
+                            <span class="value">R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            <span class="label">Total</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    updateComparisonChart(booksWithRoyalties) {
+        const type = document.getElementById('comparisonType').value;
+        const period = document.getElementById('comparisonPeriod').value;
+
+        // Filter by period
+        const now = new Date();
+        const filterDate = (date) => {
+            const d = new Date(date);
+            if (period === 'all') return true;
+            if (period === 'month') return d >= new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            if (period === '3months') return d >= new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+            if (period === '6months') return d >= new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+            if (period === 'year') return d >= new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            return true;
+        };
+
+        // Get all months in the period
+        const allDates = new Set();
+        booksWithRoyalties.forEach(book => {
+            book.royalties.filter(r => filterDate(r.date)).forEach(r => {
+                const d = new Date(r.date);
+                allDates.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+            });
+        });
+
+        const months = Array.from(allDates).sort();
+        const labels = months.map(m => {
+            const [year, month] = m.split('-');
+            return new Date(year, month - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        });
+
+        // Prepare datasets
+        const colors = ['#84b6f4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+        const datasets = booksWithRoyalties.map((book, index) => {
+            const data = months.map(month => {
+                const [year, m] = month.split('-');
+                const monthRoyalties = book.royalties.filter(r => {
+                    const d = new Date(r.date);
+                    return d.getFullYear() === parseInt(year) && d.getMonth() + 1 === parseInt(m);
+                });
+                
+                if (type === 'kenps') return monthRoyalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
+                if (type === 'orders') return monthRoyalties.reduce((sum, r) => sum + (r.orders || 0), 0);
+                if (type === 'value') return monthRoyalties.reduce((sum, r) => sum + (r.value || 0), 0);
+                return 0;
+            });
+
+            return {
+                label: book.title,
+                data,
+                backgroundColor: colors[index % colors.length] + '80',
+                borderColor: colors[index % colors.length],
+                borderWidth: 2
+            };
+        });
+
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+        if (this.comparisonChart) {
+            this.comparisonChart.destroy();
+        }
+
+        const typeLabels = { kenps: 'KENPs Lidas', orders: 'Pedidos', value: 'Valor (R$)' };
+
+        this.comparisonChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { color: '#94a3b8' }
+                    },
+                    title: {
+                        display: true,
+                        text: `Comparação de ${typeLabels[type]} por Mês`,
+                        color: '#94a3b8',
+                        font: { size: 16 }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                    }
+                }
+            }
+        });
     },
 
     // ========================================

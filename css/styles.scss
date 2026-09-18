@@ -982,7 +982,7 @@ svg[data-lucide] {
     align-items: center;
     gap: 6px;
     
-    &:hover {
+    &:hover:not(.tab-disabled) {
         background: rgba(255, 255, 255, 0.05);
         color: $text-primary;
     }
@@ -990,6 +990,17 @@ svg[data-lucide] {
     &.active {
         background: $accent-primary;
         color: #1F2A44;
+    }
+    
+    &.tab-disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+        
+        &:hover {
+            background: transparent;
+            color: $text-secondary;
+        }
     }
     
     .tab-icon {
@@ -1594,6 +1605,143 @@ svg[data-lucide] {
 }
 
 // ========================================
+// COMPARISON PAGE
+// ========================================
+
+.comparison-filters {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: $text-secondary;
+        }
+        
+        select {
+            padding: 10px 16px;
+            background: $bg-secondary;
+            border: 1px solid $border-color;
+            border-radius: $radius-md;
+            color: $text-primary;
+            font-size: 0.95rem;
+            min-width: 180px;
+            cursor: pointer;
+            
+            &:focus {
+                outline: none;
+                border-color: $accent-primary;
+            }
+        }
+    }
+    
+    @media (max-width: $mobile) {
+        flex-direction: column;
+        gap: 16px;
+        
+        .filter-group select {
+            width: 100%;
+        }
+    }
+}
+
+.comparison-content {
+    display: grid;
+    gap: 24px;
+}
+
+.comparison-chart-container {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 24px;
+    min-height: 400px;
+    
+    canvas {
+        max-height: 400px;
+    }
+}
+
+.comparison-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.comparison-book-card {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 20px;
+    
+    .book-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        
+        .book-emoji {
+            font-size: 2rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: $radius-md;
+        }
+        
+        .book-info {
+            flex: 1;
+            
+            h3 {
+                font-size: 1rem;
+                font-weight: 600;
+                margin-bottom: 2px;
+            }
+            
+            p {
+                font-size: 0.8rem;
+                color: $text-secondary;
+            }
+        }
+    }
+    
+    .book-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        
+        .stat {
+            text-align: center;
+            padding: 12px 8px;
+            background: $bg-tertiary;
+            border-radius: $radius-md;
+            
+            .value {
+                display: block;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: $accent-primary;
+                margin-bottom: 4px;
+            }
+            
+            .label {
+                font-size: 0.7rem;
+                color: $text-secondary;
+                text-transform: uppercase;
+            }
+        }
+    }
+}
+
+// ========================================
 // ROYALTIES TAB
 // ========================================
 
@@ -1627,6 +1775,45 @@ svg[data-lucide] {
     .royalties-stat-label {
         font-size: 0.85rem;
         color: $text-secondary;
+    }
+}
+
+.royalties-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    
+    label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: $text-secondary;
+    }
+    
+    select {
+        padding: 8px 16px;
+        background: $bg-secondary;
+        border: 1px solid $border-color;
+        border-radius: $radius-md;
+        color: $text-primary;
+        font-size: 0.9rem;
+        min-width: 180px;
+        cursor: pointer;
+        
+        &:focus {
+            outline: none;
+            border-color: $accent-primary;
+        }
+    }
+    
+    @media (max-width: $mobile) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        
+        select {
+            width: 100%;
+        }
     }
 }
 
@@ -1743,14 +1930,14 @@ svg[data-lucide] {
     right: 0;
     background: $bg-secondary;
     border-top: 1px solid $border-color;
-    padding: 8px 0;
+    padding: 8px 16px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 100;
     
     @media (max-width: $mobile) {
         display: flex;
-        justify-content: center;
-        align-items: flex-end;
+        justify-content: space-around;
+        align-items: center;
     }
 }
 
@@ -1760,14 +1947,14 @@ svg[data-lucide] {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 8px 0;
-    width: 70px;
+    padding: 8px 12px;
     background: transparent;
     border: none;
     color: $text-secondary;
-    font-size: 0.7rem;
     cursor: pointer;
     transition: $transition;
+    flex: 1;
+    max-width: 80px;
     
     .mobile-nav-icon {
         width: 22px;
@@ -1777,6 +1964,7 @@ svg[data-lucide] {
     .mobile-nav-text {
         font-size: 0.65rem;
         font-weight: 500;
+        white-space: nowrap;
     }
     
     &.active {
@@ -1784,20 +1972,25 @@ svg[data-lucide] {
     }
     
     &.mobile-nav-add {
+        flex: 0 0 auto;
         width: 56px;
         height: 56px;
+        max-width: 56px;
         padding: 0;
         background: $accent-gradient;
         border-radius: 50%;
-        margin: 0 12px;
-        margin-bottom: 16px;
+        margin: 0 8px;
+        margin-top: -24px;
         box-shadow: 0 4px 20px rgba($accent-primary, 0.4);
-        flex-direction: row;
         
         .mobile-nav-icon {
             width: 24px;
             height: 24px;
             color: #1F2A44;
+        }
+        
+        .mobile-nav-text {
+            display: none;
         }
         
         &:active {
@@ -2078,11 +2271,15 @@ form {
     cursor: pointer;
     
     input[type="checkbox"] {
-        display: none;
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
     }
     
     .toggle-switch {
         position: relative;
+        flex-shrink: 0;
         width: 44px;
         height: 24px;
         background: $border-color;
@@ -2099,11 +2296,12 @@ form {
             background: white;
             border-radius: 50%;
             transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
     }
     
     input:checked + .toggle-switch {
-        background: $accent-primary;
+        background: #10b981;
         
         &::after {
             transform: translateX(20px);

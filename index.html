@@ -58,6 +58,10 @@
                     <i data-lucide="library" class="nav-icon"></i>
                     <span class="nav-text">Meus Livros</span>
                 </button>
+                <button class="nav-item" data-page="comparison">
+                    <i data-lucide="git-compare" class="nav-icon"></i>
+                    <span class="nav-text">Comparação</span>
+                </button>
             </nav>
             <div class="sidebar-footer">
                 <button class="btn-new-record" id="btnNewRecord">
@@ -149,6 +153,48 @@
                         <span class="empty-icon">📚</span>
                         <p>Nenhum livro cadastrado ainda.</p>
                         <button class="btn-primary" id="btnNewBookEmpty">Criar Primeiro Livro</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comparison Page -->
+            <section class="page" id="comparisonPage">
+                <header class="page-header">
+                    <h1>Comparação de Royalties</h1>
+                    <p class="page-subtitle">Compare o desempenho dos seus livros lançados</p>
+                </header>
+
+                <div class="comparison-filters">
+                    <div class="filter-group">
+                        <label>Tipo de Comparação:</label>
+                        <select id="comparisonType">
+                            <option value="kenps">KENPs Lidas</option>
+                            <option value="orders">Pedidos</option>
+                            <option value="value">Valor (R$)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Período:</label>
+                        <select id="comparisonPeriod">
+                            <option value="all">Todos os tempos</option>
+                            <option value="month">Último mês</option>
+                            <option value="3months">Últimos 3 meses</option>
+                            <option value="6months">Últimos 6 meses</option>
+                            <option value="year">Último ano</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="comparison-content">
+                    <div class="comparison-chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                    
+                    <div class="comparison-summary" id="comparisonSummary">
+                        <div class="empty-state">
+                            <span class="empty-icon">📊</span>
+                            <p>Nenhum livro lançado com royalties registrados.</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -308,6 +354,12 @@
                                 <span class="royalties-stat-label">Total de Royalties</span>
                             </div>
                         </div>
+                        <div class="royalties-filter">
+                            <label>Filtrar por:</label>
+                            <select id="royaltiesMonthFilter">
+                                <option value="all">Todos os meses</option>
+                            </select>
+                        </div>
                         <div class="section-header">
                             <h3>Registro de Royalties</h3>
                             <button class="btn-primary btn-sm" id="btnAddRoyalty">+ Royalty</button>
@@ -348,6 +400,10 @@
             </button>
             <button class="mobile-nav-item mobile-nav-add" id="btnNewRecordMobile">
                 <i data-lucide="plus" class="mobile-nav-icon"></i>
+            </button>
+            <button class="mobile-nav-item" data-page="comparison">
+                <i data-lucide="git-compare" class="mobile-nav-icon"></i>
+                <span class="mobile-nav-text">Comparar</span>
             </button>
             <button class="mobile-nav-item" id="btnToggleThemeMobile">
                 <i data-lucide="moon" class="mobile-nav-icon" id="themeIconMobile"></i>
