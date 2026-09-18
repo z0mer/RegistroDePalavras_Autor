@@ -226,6 +226,7 @@
                     <button class="tab-btn" data-tab="summary"><i data-lucide="file-text" class="tab-icon"></i><span class="tab-text">Resumo</span></button>
                     <button class="tab-btn" data-tab="settings"><i data-lucide="map-pin" class="tab-icon"></i><span class="tab-text">Cenários</span></button>
                     <button class="tab-btn" data-tab="chapters"><i data-lucide="book-open" class="tab-icon"></i><span class="tab-text">Capítulos</span></button>
+                    <button class="tab-btn" data-tab="expenses"><i data-lucide="receipt" class="tab-icon"></i><span class="tab-text">Gastos</span></button>
                     <button class="tab-btn" data-tab="royalties" id="tabBtnRoyalties" style="display: none;"><i data-lucide="coins" class="tab-icon"></i><span class="tab-text">Royalties</span></button>
                 </div>
 
@@ -334,6 +335,48 @@
                             <div class="empty-state" id="chaptersEmpty">
                                 <span class="empty-icon">📖</span>
                                 <p>Nenhum capítulo cadastrado.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expenses Tab -->
+                    <div class="tab-content" id="tabExpenses">
+                        <div class="expenses-stats-row">
+                            <div class="expenses-stat-card">
+                                <span class="expenses-stat-value" id="expensesTotalValue">R$ 0,00</span>
+                                <span class="expenses-stat-label">Total de Gastos</span>
+                            </div>
+                            <div class="expenses-stat-card">
+                                <span class="expenses-stat-value" id="expensesPaidValue">R$ 0,00</span>
+                                <span class="expenses-stat-label">Total Pago</span>
+                            </div>
+                            <div class="expenses-stat-card">
+                                <span class="expenses-stat-value" id="expensesPendingValue">R$ 0,00</span>
+                                <span class="expenses-stat-label">Pendente</span>
+                            </div>
+                        </div>
+                        <div class="section-header">
+                            <h3>Registro de Gastos</h3>
+                            <button class="btn-primary btn-sm" id="btnAddExpense">+ Gasto</button>
+                        </div>
+                        <div class="expenses-table-container">
+                            <table class="expenses-table" id="expensesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Item</th>
+                                        <th>Profissional</th>
+                                        <th>Valor</th>
+                                        <th>Pago</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expensesBody">
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="expensesEmpty">
+                                <span class="empty-icon">💸</span>
+                                <p>Nenhum gasto registrado.</p>
                             </div>
                         </div>
                     </div>
@@ -686,6 +729,57 @@
                 <div class="form-actions">
                     <button type="button" class="btn-close-form modal-close"><i data-lucide="x"></i></button>
                     <button type="submit" class="btn-primary">Salvar Capítulo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Expense -->
+    <div class="modal" id="modalExpense">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalExpenseTitle">Novo Gasto</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formExpense">
+                <input type="hidden" id="expenseId">
+                <div class="form-group">
+                    <label for="expenseType">Tipo de Serviço *</label>
+                    <select id="expenseType" required>
+                        <option value="">Selecione...</option>
+                        <option value="Ilustração">🎨 Ilustração</option>
+                        <option value="Revisão">📝 Revisão</option>
+                        <option value="Diagramação">📐 Diagramação</option>
+                        <option value="Capa">📕 Capa</option>
+                        <option value="Publicidade">📣 Publicidade</option>
+                        <option value="Divulgação">📢 Divulgação</option>
+                        <option value="Feed">📱 Feed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expenseItem">Item Contratado *</label>
+                    <input type="text" id="expenseItem" required placeholder="Ex: 5 ilustrações de cenas">
+                </div>
+                <div class="form-group">
+                    <label for="expenseProfessional">Profissional (Nome ou @)</label>
+                    <input type="text" id="expenseProfessional" placeholder="Ex: @artista_fulano">
+                </div>
+                <div class="form-group">
+                    <label for="expenseValue">Valor Total (R$) *</label>
+                    <input type="number" id="expenseValue" min="0" step="0.01" required placeholder="Ex: 500.00">
+                </div>
+                <div class="form-group">
+                    <label for="expensePaidPercent">Quanto já pagou?</label>
+                    <select id="expensePaidPercent">
+                        <option value="0">0% - Nada pago</option>
+                        <option value="50">50% - Metade</option>
+                        <option value="100">100% - Completo</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close"><i data-lucide="x"></i></button>
+                    <button type="submit" class="btn-primary">Salvar Gasto</button>
                 </div>
             </form>
         </div>

@@ -1656,6 +1656,172 @@ svg[data-lucide] {
     height: 30px;
   }
 }
+.expenses-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) {
+  .expenses-stats-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.expenses-stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+.expenses-stat-card .expenses-stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 4px;
+}
+.expenses-stat-card .expenses-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.expenses-table-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.expenses-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.expenses-table th, .expenses-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+.expenses-table th {
+  background: var(--bg-tertiary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.expenses-table td {
+  font-size: 0.95rem;
+}
+.expenses-table tbody tr {
+  transition: all 0.3s ease;
+}
+.expenses-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.expenses-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.expenses-table .expense-type .expense-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+.expenses-table .expense-item {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.expenses-table .expense-professional {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.expenses-table .expense-value {
+  font-weight: 700;
+  color: #ef4444;
+}
+.expenses-table .expense-paid .paid-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.expenses-table .expense-paid .paid-badge.paid-0 {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+.expenses-table .expense-paid .paid-badge.paid-50 {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+.expenses-table .expense-paid .paid-badge.paid-100 {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+.expenses-table .expense-actions {
+  width: 100px;
+  white-space: nowrap;
+}
+.expenses-table .expense-actions .btn-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  width: 36px;
+  height: 36px;
+}
+.expenses-table .expense-actions .btn-icon:first-child {
+  margin-right: 4px;
+}
+.expenses-table .expense-actions .btn-icon svg {
+  color: var(--icon-color);
+}
+
+@media (max-width: 768px) {
+  .expenses-table {
+    display: block;
+  }
+  .expenses-table thead {
+    display: none;
+  }
+  .expenses-table tbody {
+    display: block;
+  }
+  .expenses-table tr {
+    display: block;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .expenses-table tr:last-child {
+    border-bottom: none;
+  }
+  .expenses-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: none;
+  }
+  .expenses-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .expenses-table .expense-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 12px;
+  }
+  .expenses-table .expense-actions .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
 .mobile-nav {
   display: none;
   position: fixed;

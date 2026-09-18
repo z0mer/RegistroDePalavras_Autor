@@ -1919,6 +1919,208 @@ svg[data-lucide] {
 }
 
 // ========================================
+// EXPENSES TAB
+// ========================================
+
+.expenses-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+    
+    @media (max-width: $mobile) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+.expenses-stat-card {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 20px;
+    text-align: center;
+    
+    .expenses-stat-value {
+        display: block;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: $accent-primary;
+        margin-bottom: 4px;
+    }
+    
+    .expenses-stat-label {
+        font-size: 0.85rem;
+        color: $text-secondary;
+    }
+}
+
+.expenses-table-container {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    overflow: hidden;
+}
+
+.expenses-table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid $border-color;
+    }
+    
+    th {
+        background: $bg-tertiary;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    td {
+        font-size: 0.95rem;
+    }
+    
+    tbody tr {
+        transition: $transition;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        &:last-child td {
+            border-bottom: none;
+        }
+    }
+    
+    .expense-type {
+        .expense-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+    }
+    
+    .expense-item {
+        font-weight: 500;
+        color: $text-primary;
+    }
+    
+    .expense-professional {
+        color: $text-secondary;
+        font-size: 0.9rem;
+    }
+    
+    .expense-value {
+        font-weight: 700;
+        color: #ef4444;
+    }
+    
+    .expense-paid {
+        .paid-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            
+            &.paid-0 {
+                background: rgba(239, 68, 68, 0.15);
+                color: #ef4444;
+            }
+            
+            &.paid-50 {
+                background: rgba(245, 158, 11, 0.15);
+                color: #f59e0b;
+            }
+            
+            &.paid-100 {
+                background: rgba(16, 185, 129, 0.15);
+                color: #10b981;
+            }
+        }
+    }
+    
+    .expense-actions {
+        width: 100px;
+        white-space: nowrap;
+        
+        .btn-icon {
+            display: inline-flex;
+            vertical-align: middle;
+            width: 36px;
+            height: 36px;
+            
+            &:first-child {
+                margin-right: 4px;
+            }
+            
+            svg {
+                color: var(--icon-color);
+            }
+        }
+    }
+}
+
+@media (max-width: $mobile) {
+    .expenses-table {
+        display: block;
+        
+        thead {
+            display: none;
+        }
+        
+        tbody {
+            display: block;
+        }
+        
+        tr {
+            display: block;
+            padding: 16px;
+            border-bottom: 1px solid $border-color;
+            
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+        
+        td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: none;
+            
+            &::before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 0.8rem;
+                color: $text-secondary;
+                text-transform: uppercase;
+            }
+        }
+        
+        .expense-actions {
+            width: 100%;
+            justify-content: flex-end;
+            padding-top: 12px;
+            
+            .btn-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    }
+}
+
+// ========================================
 // MOBILE NAVIGATION
 // ========================================
 

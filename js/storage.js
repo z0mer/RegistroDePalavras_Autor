@@ -102,6 +102,16 @@ const Storage = {
                 .where('bookId', '==', bookId).get();
             chaptersSnapshot.docs.forEach(doc => batch.delete(doc.ref));
             
+            // Delete all royalties
+            const royaltiesSnapshot = await db.collection('royalties')
+                .where('bookId', '==', bookId).get();
+            royaltiesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+            
+            // Delete all expenses
+            const expensesSnapshot = await db.collection('expenses')
+                .where('bookId', '==', bookId).get();
+            expensesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+            
             // Delete the book
             batch.delete(db.collection('books').doc(bookId));
             
@@ -444,6 +454,83 @@ const Storage = {
             console.error('Erro ao excluir royalty:', error);
             throw error;
         }
+    },
+
+    // ========================================
+    // EXPENSES COLLECTION
+    // ========================================
+
+    async getExpensesByBook(bookId) {
+        try {
+            const snapshot = await db.collection('expenses')
+                .where('bookId', '==', bookId)
+                .get();
+            const expenses = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            return expenses.sort((a, b) => {
+                // Sort by createdAt descending (most recent first)
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateB - dateA;
+            });
+        } catch (error) {
+            console.error('Erro ao buscar gastos:', error);
+            throw error;
+        }
+    },
+
+    async createExpense(expenseData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
+        try {
+            const docRef = await db.collection('expenses').add({
+                ...expenseData,
+                userId: this.userId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return { id: docRef.id, ...expenseData };
+        } catch (error) {
+            console.error('Erro ao criar gasto:', error);
+            throw error;
+        }
+    },
+
+    async updateExpense(expenseId, expenseData) {
+        try {
+            await db.collection('expenses').doc(expenseId).update({
+                ...expenseData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return { id: expenseId, ...expenseData };
+        } catch (error) {
+            console.error('Erro ao atualizar gasto:', error);
+            throw error;
+        }
+    },
+
+    async deleteExpense(expenseId) {
+        try {
+            await db.collection('expenses').doc(expenseId).delete();
+            return true;
+        } catch (error) {
+            console.error('Erro ao excluir gasto:', error);
+            throw error;
+        }
+    },
+
+    // Expense type colors helper
+    getExpenseTypeColor(type) {
+        const colors = {
+            'Ilustração': '#e91e63',
+            'Revisão': '#9c27b0',
+            'Diagramação': '#3f51b5',
+            'Capa': '#00bcd4',
+            'Publicidade': '#ff9800',
+            'Divulgação': '#4caf50',
+            'Feed': '#607d8b'
+        };
+        return colors[type] || '#888888';
     },
 
     // ========================================

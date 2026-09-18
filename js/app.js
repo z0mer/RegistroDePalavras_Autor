@@ -18,6 +18,7 @@ const App = {
     scenarios: [],
     chapters: [],
     royalties: [],
+    expenses: [],
 
     // ========================================
     // INITIALIZATION
@@ -161,11 +162,12 @@ const App = {
 
     async loadBookDetails(bookId) {
         try {
-            [this.characters, this.scenarios, this.chapters, this.royalties] = await Promise.all([
+            [this.characters, this.scenarios, this.chapters, this.royalties, this.expenses] = await Promise.all([
                 Storage.getCharactersByBook(bookId),
                 Storage.getScenariosByBook(bookId),
                 Storage.getChaptersByBook(bookId),
-                Storage.getRoyaltiesByBook(bookId)
+                Storage.getRoyaltiesByBook(bookId),
+                Storage.getExpensesByBook(bookId)
             ]);
         } catch (error) {
             console.error('Erro ao carregar detalhes do livro:', error);
@@ -526,7 +528,12 @@ const App = {
             return;
         }
 
-        container.innerHTML = this.books.map(book => {
+        // Sort books alphabetically by title
+        const sortedBooks = [...this.books].sort((a, b) => 
+            a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' })
+        );
+
+        container.innerHTML = sortedBooks.map(book => {
             const bookRecords = this.records.filter(r => r.bookId === book.id);
             const totalWords = Storage.calculateTotalWords(bookRecords);
             const launchedBadge = book.isLaunched ? '<span class="launched-badge">Lançado</span>' : '';
@@ -611,6 +618,7 @@ const App = {
         this.renderSummary();
         this.renderScenarios();
         this.renderChapters();
+        this.renderExpenses();
         
         // Render royalties if book is launched
         if (this.currentBook.isLaunched) {
@@ -929,6 +937,63 @@ const App = {
         lucide.createIcons();
     },
 
+    renderExpenses() {
+        const tbody = document.getElementById('expensesBody');
+        const emptyState = document.getElementById('expensesEmpty');
+        const table = document.querySelector('.expenses-table');
+
+        // Update stats
+        const totalValue = this.expenses.reduce((sum, e) => sum + (e.value || 0), 0);
+        const paidValue = this.expenses.reduce((sum, e) => {
+            const paidPercent = e.paidPercent || 0;
+            return sum + ((e.value || 0) * paidPercent / 100);
+        }, 0);
+        const pendingValue = totalValue - paidValue;
+
+        document.getElementById('expensesTotalValue').textContent = `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('expensesPaidValue').textContent = `R$ ${paidValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('expensesPendingValue').textContent = `R$ ${pendingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        if (this.expenses.length === 0) {
+            table.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        table.style.display = 'table';
+        emptyState.style.display = 'none';
+
+        tbody.innerHTML = this.expenses.map(expense => {
+            const typeColor = Storage.getExpenseTypeColor(expense.type);
+            const formattedValue = `R$ ${(expense.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const paidPercent = expense.paidPercent || 0;
+            const paidLabel = paidPercent === 0 ? 'Pendente' : paidPercent === 50 ? '50% Pago' : 'Pago';
+
+            return `
+                <tr>
+                    <td class="expense-type" data-label="Tipo">
+                        <span class="expense-type-badge" style="background: ${typeColor}">${expense.type}</span>
+                    </td>
+                    <td class="expense-item" data-label="Item">${this.escapeHtml(expense.item || '-')}</td>
+                    <td class="expense-professional" data-label="Profissional">${this.escapeHtml(expense.professional || '-')}</td>
+                    <td class="expense-value" data-label="Valor">${formattedValue}</td>
+                    <td class="expense-paid" data-label="Status">
+                        <span class="paid-badge paid-${paidPercent}">${paidLabel}</span>
+                    </td>
+                    <td class="expense-actions" data-label="">
+                        <button class="btn-icon" onclick="App.editExpense('${expense.id}')" title="Editar">
+                            <i data-lucide="pencil"></i>
+                        </button>
+                        <button class="btn-icon" onclick="App.deleteExpense('${expense.id}')" title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        lucide.createIcons();
+    },
+
     // ========================================
     // MODALS
     // ========================================
@@ -958,6 +1023,9 @@ const App = {
 
         // Royalty
         document.getElementById('btnAddRoyalty').addEventListener('click', () => this.openRoyaltyModal());
+
+        // Expense
+        document.getElementById('btnAddExpense').addEventListener('click', () => this.openExpenseModal());
 
         // Delete
         document.getElementById('btnDeleteBook').addEventListener('click', () => this.confirmDeleteBook());
@@ -1223,6 +1291,35 @@ const App = {
     editScenario(id) { this.openScenarioModal(id); },
     editChapter(id) { this.openChapterModal(id); },
     editRoyalty(id) { this.openRoyaltyModal(id); },
+    editExpense(id) { this.openExpenseModal(id); },
+
+    openExpenseModal(expenseId = null) {
+        const form = document.getElementById('formExpense');
+        const title = document.getElementById('modalExpenseTitle');
+
+        form.reset();
+        document.getElementById('expenseId').value = '';
+        document.getElementById('expenseType').value = '';
+        document.getElementById('expensePaidPercent').value = '0';
+
+        if (expenseId) {
+            const expense = this.expenses.find(e => e.id === expenseId);
+            if (expense) {
+                title.textContent = 'Editar Gasto';
+                document.getElementById('expenseId').value = expense.id;
+                document.getElementById('expenseType').value = expense.type || '';
+                document.getElementById('expenseItem').value = expense.item || '';
+                document.getElementById('expenseProfessional').value = expense.professional || '';
+                document.getElementById('expenseValue').value = expense.value || '';
+                document.getElementById('expensePaidPercent').value = expense.paidPercent || '0';
+            }
+        } else {
+            title.textContent = 'Novo Gasto';
+        }
+
+        this.openModal('modalExpense');
+        lucide.createIcons();
+    },
 
     openRoyaltyModal(royaltyId = null) {
         const form = document.getElementById('formRoyalty');
@@ -1304,6 +1401,12 @@ const App = {
         this.openModal('modalConfirm');
     },
 
+    deleteExpense(expenseId) {
+        this.currentDeleteTarget = { type: 'expense', id: expenseId };
+        document.getElementById('confirmMessage').textContent = 'Tem certeza que deseja excluir este gasto?';
+        this.openModal('modalConfirm');
+    },
+
     async executeDelete() {
         if (!this.currentDeleteTarget) return;
 
@@ -1340,6 +1443,11 @@ const App = {
                 this.royalties = this.royalties.filter(r => r.id !== id);
                 this.renderRoyalties();
                 this.showToast('Royalty excluído!', 'success');
+            } else if (type === 'expense') {
+                await Storage.deleteExpense(id);
+                this.expenses = this.expenses.filter(e => e.id !== id);
+                this.renderExpenses();
+                this.showToast('Gasto excluído!', 'success');
             }
 
         } catch (error) {
@@ -1388,6 +1496,11 @@ const App = {
         document.getElementById('formRoyalty').addEventListener('submit', async (e) => {
             e.preventDefault();
             await this.saveRoyalty();
+        });
+
+        document.getElementById('formExpense').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveExpense();
         });
     },
 
@@ -1600,6 +1713,36 @@ const App = {
             this.closeAllModals();
         } catch (error) {
             this.showToast('Erro ao salvar royalty.', 'error');
+        }
+    },
+
+    async saveExpense() {
+        const expenseId = document.getElementById('expenseId').value;
+        const expenseData = {
+            bookId: this.currentBookId,
+            type: document.getElementById('expenseType').value,
+            item: document.getElementById('expenseItem').value.trim(),
+            professional: document.getElementById('expenseProfessional').value.trim(),
+            value: parseFloat(document.getElementById('expenseValue').value) || 0,
+            paidPercent: parseInt(document.getElementById('expensePaidPercent').value) || 0
+        };
+
+        try {
+            if (expenseId) {
+                await Storage.updateExpense(expenseId, expenseData);
+                const index = this.expenses.findIndex(e => e.id === expenseId);
+                if (index !== -1) this.expenses[index] = { id: expenseId, ...expenseData };
+                this.showToast('Gasto atualizado!', 'success');
+            } else {
+                const newExpense = await Storage.createExpense(expenseData);
+                this.expenses.unshift(newExpense);
+                this.showToast('Gasto registrado!', 'success');
+            }
+
+            this.renderExpenses();
+            this.closeAllModals();
+        } catch (error) {
+            this.showToast('Erro ao salvar gasto.', 'error');
         }
     },
 
