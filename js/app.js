@@ -432,14 +432,20 @@ const App = {
     updateBookChart(bookRecords) {
         if (!this.bookChart) this.initBookChart();
 
-        const sortedRecords = [...bookRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const labels = sortedRecords.map(r => {
-            const d = new Date(r.date + 'T00:00:00');
+        // Group records by date and sum words
+        const dataByDate = {};
+        bookRecords.forEach(record => {
+            dataByDate[record.date] = (dataByDate[record.date] || 0) + record.words;
+        });
+
+        const sortedDates = Object.keys(dataByDate).sort();
+        const labels = sortedDates.map(date => {
+            const d = new Date(date + 'T00:00:00');
             return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         });
 
         this.bookChart.data.labels = labels;
-        this.bookChart.data.datasets[0].data = sortedRecords.map(r => r.words);
+        this.bookChart.data.datasets[0].data = sortedDates.map(date => dataByDate[date]);
         this.bookChart.update();
     },
 
@@ -791,8 +797,8 @@ const App = {
         // Populate month filter options
         const months = new Set();
         this.royalties.forEach(r => {
-            const d = new Date(r.date);
-            months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+            const [year, month] = r.date.split('-');
+            months.add(`${year}-${month}`);
         });
 
         const currentFilter = filterSelect.value;
@@ -801,7 +807,7 @@ const App = {
         filterSelect.innerHTML = '<option value="all">Todos os meses</option>' +
             sortedMonths.map(m => {
                 const [year, month] = m.split('-');
-                const label = new Date(year, month - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                const label = new Date(year, parseInt(month) - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 return `<option value="${m}">${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
             }).join('');
         
@@ -818,10 +824,8 @@ const App = {
         let filteredRoyalties = this.royalties;
         
         if (selectedMonth !== 'all') {
-            const [year, month] = selectedMonth.split('-');
             filteredRoyalties = this.royalties.filter(r => {
-                const d = new Date(r.date);
-                return d.getFullYear() === parseInt(year) && d.getMonth() + 1 === parseInt(month);
+                return r.date.startsWith(selectedMonth);
             });
         }
 
@@ -1192,8 +1196,11 @@ const App = {
         const select = document.getElementById('recordBook');
         const currentValue = select.value;
 
+        // Filter out launched books - they shouldn't have word records
+        const availableBooks = this.books.filter(book => !book.isLaunched);
+
         select.innerHTML = '<option value="">Selecione um livro</option>' +
-            this.books.map(book => `<option value="${book.id}">${this.escapeHtml(book.title)}</option>`).join('');
+            availableBooks.map(book => `<option value="${book.id}">${this.escapeHtml(book.title)}</option>`).join('');
 
         if (currentValue) select.value = currentValue;
     },

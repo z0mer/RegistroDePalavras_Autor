@@ -127,7 +127,15 @@ const Storage = {
                 id: doc.id,
                 ...doc.data()
             }));
-            return records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Sort by date descending, then by createdAt descending (most recent first)
+            return records.sort((a, b) => {
+                const dateCompare = new Date(b.date) - new Date(a.date);
+                if (dateCompare !== 0) return dateCompare;
+                // If same date, sort by createdAt (most recent first)
+                const createdAtA = a.createdAt?.toDate?.() || new Date(0);
+                const createdAtB = b.createdAt?.toDate?.() || new Date(0);
+                return createdAtB - createdAtA;
+            });
         } catch (error) {
             console.error('Erro ao buscar registros:', error);
             throw error;
