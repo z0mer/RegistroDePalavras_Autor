@@ -1963,26 +1963,31 @@ form {
 }
 
 .toggle-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  flex-wrap: nowrap;
 }
 .toggle-label input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
   position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  left: -9999px;
 }
 .toggle-label .toggle-switch {
+  display: inline-block;
   position: relative;
-  flex-shrink: 0;
   width: 48px;
-  min-width: 48px;
   height: 26px;
   background: var(--border-color);
   border-radius: 13px;
   transition: background 0.3s ease;
+  flex-shrink: 0;
 }
 .toggle-label .toggle-switch::after {
   content: "";
@@ -1993,20 +1998,19 @@ form {
   height: 20px;
   background: white;
   border-radius: 50%;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, left 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 .toggle-label input:checked + .toggle-switch {
   background: #10b981;
 }
 .toggle-label input:checked + .toggle-switch::after {
-  transform: translateX(22px);
+  left: 25px;
 }
 .toggle-label .toggle-text {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-primary);
-  flex: 1;
 }
 
 .form-row {
