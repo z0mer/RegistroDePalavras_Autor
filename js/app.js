@@ -1697,8 +1697,8 @@ const App = {
 
         // Filter by period
         const now = new Date();
-        const filterDate = (date) => {
-            const d = new Date(date);
+        const filterDate = (dateStr) => {
+            const d = new Date(dateStr + 'T00:00:00');
             if (period === 'all') return true;
             if (period === 'month') return d >= new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
             if (period === '3months') return d >= new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
@@ -1707,30 +1707,26 @@ const App = {
             return true;
         };
 
-        // Get all months in the period
+        // Get all months in the period (using date string directly)
         const allDates = new Set();
         booksWithRoyalties.forEach(book => {
             book.royalties.filter(r => filterDate(r.date)).forEach(r => {
-                const d = new Date(r.date);
-                allDates.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                // Extract year-month from date string (YYYY-MM-DD)
+                const [year, month] = r.date.split('-');
+                allDates.add(`${year}-${month}`);
             });
         });
 
         const months = Array.from(allDates).sort();
         const labels = months.map(m => {
             const [year, month] = m.split('-');
-            return new Date(year, month - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+            return new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
         });
 
-        // Prepare datasets
-        const colors = ['#84b6f4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
-        const datasets = booksWithRoyalties.map((book, index) => {
+        // Prepare datasets - use book colors
+        const datasets = booksWithRoyalties.map((book) => {
             const data = months.map(month => {
-                const [year, m] = month.split('-');
-                const monthRoyalties = book.royalties.filter(r => {
-                    const d = new Date(r.date);
-                    return d.getFullYear() === parseInt(year) && d.getMonth() + 1 === parseInt(m);
-                });
+                const monthRoyalties = book.royalties.filter(r => r.date.startsWith(month));
                 
                 if (type === 'kenps') return monthRoyalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
                 if (type === 'orders') return monthRoyalties.reduce((sum, r) => sum + (r.orders || 0), 0);
@@ -1738,11 +1734,13 @@ const App = {
                 return 0;
             });
 
+            const bookColor = book.color || '#84b6f4';
+
             return {
                 label: book.title,
                 data,
-                backgroundColor: colors[index % colors.length] + '80',
-                borderColor: colors[index % colors.length],
+                backgroundColor: bookColor + 'CC',
+                borderColor: bookColor,
                 borderWidth: 2
             };
         });
