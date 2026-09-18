@@ -180,6 +180,7 @@
                     <button class="tab-btn" data-tab="summary"><i data-lucide="file-text" class="tab-icon"></i><span class="tab-text">Resumo</span></button>
                     <button class="tab-btn" data-tab="settings"><i data-lucide="map-pin" class="tab-icon"></i><span class="tab-text">Cenários</span></button>
                     <button class="tab-btn" data-tab="chapters"><i data-lucide="book-open" class="tab-icon"></i><span class="tab-text">Capítulos</span></button>
+                    <button class="tab-btn" data-tab="royalties" id="tabBtnRoyalties" style="display: none;"><i data-lucide="coins" class="tab-icon"></i><span class="tab-text">Royalties</span></button>
                 </div>
 
                 <!-- Tab Contents -->
@@ -290,6 +291,47 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Royalties Tab -->
+                    <div class="tab-content" id="tabRoyalties">
+                        <div class="royalties-stats-row">
+                            <div class="royalties-stat-card">
+                                <span class="royalties-stat-value" id="royaltiesTotalKenps">0</span>
+                                <span class="royalties-stat-label">KENPs totais</span>
+                            </div>
+                            <div class="royalties-stat-card">
+                                <span class="royalties-stat-value" id="royaltiesTotalOrders">0</span>
+                                <span class="royalties-stat-label">Pedidos totais</span>
+                            </div>
+                            <div class="royalties-stat-card">
+                                <span class="royalties-stat-value" id="royaltiesTotalValue">R$ 0,00</span>
+                                <span class="royalties-stat-label">Total de Royalties</span>
+                            </div>
+                        </div>
+                        <div class="section-header">
+                            <h3>Registro de Royalties</h3>
+                            <button class="btn-primary btn-sm" id="btnAddRoyalty">+ Royalty</button>
+                        </div>
+                        <div class="royalties-table-container">
+                            <table class="royalties-table" id="royaltiesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>KENPs</th>
+                                        <th>Pedidos</th>
+                                        <th>Valor</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="royaltiesBody">
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="royaltiesEmpty">
+                                <span class="empty-icon">💰</span>
+                                <p>Nenhum registro de royalties.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -358,6 +400,14 @@
                     </div>
                     <input type="hidden" id="bookColor" value="#84b6f4">
                 </div>
+                <div class="form-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="bookLaunched">
+                        <span class="toggle-switch"></span>
+                        <span class="toggle-text">Livro já lançado</span>
+                    </label>
+                    <small class="form-hint">Livros lançados não precisam de resumo, personagens ou cenários</small>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-close-form modal-close"><i data-lucide="x"></i></button>
                     <button type="submit" class="btn-primary">Salvar Livro</button>
@@ -424,11 +474,20 @@
                         <input type="text" id="characterName" required placeholder="Nome do personagem">
                     </div>
                     <div class="form-group">
-                        <label for="characterAge">Idade</label>
-                        <input type="text" id="characterAge" placeholder="Ex: 25 anos">
+                        <label for="characterType">Tipo</label>
+                        <select id="characterType">
+                            <option value="principal">Principal</option>
+                            <option value="secundario">Secundário</option>
+                            <option value="animal">Animal</option>
+                            <option value="figurante">Figurante</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="characterAge">Idade</label>
+                        <input type="text" id="characterAge" placeholder="Ex: 25 anos">
+                    </div>
                     <div class="form-group">
                         <label for="characterGender">Gênero</label>
                         <select id="characterGender">
@@ -439,6 +498,8 @@
                             <option value="Outro">Outro</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="characterProfession">Profissão</label>
                         <input type="text" id="characterProfession" placeholder="Ex: Médica, Detetive">
@@ -569,6 +630,40 @@
                 <div class="form-actions">
                     <button type="button" class="btn-close-form modal-close"><i data-lucide="x"></i></button>
                     <button type="submit" class="btn-primary">Salvar Capítulo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Royalty -->
+    <div class="modal" id="modalRoyalty">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalRoyaltyTitle">Novo Registro de Royalty</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="formRoyalty">
+                <input type="hidden" id="royaltyId">
+                <div class="form-group">
+                    <label for="royaltyDate">Data *</label>
+                    <input type="date" id="royaltyDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="royaltyKenps">KENPs Lidas</label>
+                    <input type="number" id="royaltyKenps" min="0" placeholder="Ex: 1500">
+                </div>
+                <div class="form-group">
+                    <label for="royaltyOrders">Pedidos</label>
+                    <input type="number" id="royaltyOrders" min="0" placeholder="Ex: 3">
+                </div>
+                <div class="form-group">
+                    <label for="royaltyValue">Valor do Dia (R$)</label>
+                    <input type="number" id="royaltyValue" min="0" step="0.01" placeholder="Ex: 25.50">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-close-form modal-close"><i data-lucide="x"></i></button>
+                    <button type="submit" class="btn-primary">Salvar Royalty</button>
                 </div>
             </form>
         </div>

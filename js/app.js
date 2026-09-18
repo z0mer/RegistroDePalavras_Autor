@@ -17,6 +17,7 @@ const App = {
     characters: [],
     scenarios: [],
     chapters: [],
+    royalties: [],
 
     // ========================================
     // INITIALIZATION
@@ -157,10 +158,11 @@ const App = {
 
     async loadBookDetails(bookId) {
         try {
-            [this.characters, this.scenarios, this.chapters] = await Promise.all([
+            [this.characters, this.scenarios, this.chapters, this.royalties] = await Promise.all([
                 Storage.getCharactersByBook(bookId),
                 Storage.getScenariosByBook(bookId),
-                Storage.getChaptersByBook(bookId)
+                Storage.getChaptersByBook(bookId),
+                Storage.getRoyaltiesByBook(bookId)
             ]);
         } catch (error) {
             console.error('Erro ao carregar detalhes do livro:', error);
@@ -460,11 +462,13 @@ const App = {
         container.innerHTML = this.books.map(book => {
             const bookRecords = this.records.filter(r => r.bookId === book.id);
             const totalWords = Storage.calculateTotalWords(bookRecords);
+            const launchedBadge = book.isLaunched ? '<span class="launched-badge">Lançado</span>' : '';
 
             return `
                 <div class="book-card" onclick="App.openBookDetails('${book.id}')">
                     <div class="book-cover" style="background: linear-gradient(135deg, ${book.color} 0%, ${this.darkenColor(book.color)} 100%)">
                         <span class="book-emoji">${book.emoji || '📖'}</span>
+                        ${launchedBadge}
                     </div>
                     <div class="book-card-content">
                         <h3>${this.escapeHtml(book.title)}</h3>
@@ -512,12 +516,23 @@ const App = {
         document.getElementById('bookTotalRecords').textContent = bookRecords.length;
         document.getElementById('bookWrittenChapters').textContent = writtenChapters;
 
+        // Show/hide royalties tab based on book launched status
+        const tabBtnRoyalties = document.getElementById('tabBtnRoyalties');
+        if (tabBtnRoyalties) {
+            tabBtnRoyalties.style.display = this.currentBook.isLaunched ? '' : 'none';
+        }
+
         // Render all tabs
         this.renderBookRecords(bookRecords);
         this.renderCharacters();
         this.renderSummary();
         this.renderScenarios();
         this.renderChapters();
+        
+        // Render royalties if book is launched
+        if (this.currentBook.isLaunched) {
+            this.renderRoyalties();
+        }
 
         // Update chart
         this.initBookChart();
@@ -596,6 +611,7 @@ const App = {
                     </div>
                     <div class="character-info">
                         <h4>${this.escapeHtml(char.name)}</h4>
+                        <span class="character-type type-${char.type || 'principal'}">${this.getCharacterTypeLabel(char.type)}</span>
                         ${char.avatarName ? `<span class="avatar-name">${this.escapeHtml(char.avatarName)}</span>` : ''}
                         ${char.age || char.gender ? `<span>${[char.age, char.gender].filter(Boolean).join(' • ')}</span>` : ''}
                         ${char.profession ? `<span class="profession">${this.escapeHtml(char.profession)}</span>` : ''}
@@ -738,6 +754,53 @@ const App = {
         lucide.createIcons();
     },
 
+    renderRoyalties() {
+        const tbody = document.getElementById('royaltiesBody');
+        const emptyState = document.getElementById('royaltiesEmpty');
+        const table = document.querySelector('.royalties-table');
+
+        // Update stats
+        const totalKenps = this.royalties.reduce((sum, r) => sum + (r.kenps || 0), 0);
+        const totalOrders = this.royalties.reduce((sum, r) => sum + (r.orders || 0), 0);
+        const totalValue = this.royalties.reduce((sum, r) => sum + (r.value || 0), 0);
+
+        document.getElementById('royaltiesTotalKenps').textContent = totalKenps.toLocaleString('pt-BR');
+        document.getElementById('royaltiesTotalOrders').textContent = totalOrders.toLocaleString('pt-BR');
+        document.getElementById('royaltiesTotalValue').textContent = `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        if (this.royalties.length === 0) {
+            table.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        table.style.display = 'table';
+        emptyState.style.display = 'none';
+
+        tbody.innerHTML = this.royalties.map(royalty => {
+            const formattedDate = new Date(royalty.date + 'T00:00:00').toLocaleDateString('pt-BR');
+            const formattedValue = `R$ ${(royalty.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            return `
+                <tr>
+                    <td class="royalty-date">${formattedDate}</td>
+                    <td class="royalty-kenps">${(royalty.kenps || 0).toLocaleString('pt-BR')}</td>
+                    <td class="royalty-orders">${royalty.orders || 0}</td>
+                    <td class="royalty-value">${formattedValue}</td>
+                    <td class="royalty-actions">
+                        <button class="btn-icon" onclick="App.editRoyalty('${royalty.id}')" title="Editar">
+                            <i data-lucide="pencil"></i>
+                        </button>
+                        <button class="btn-icon" onclick="App.deleteRoyalty('${royalty.id}')" title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        lucide.createIcons();
+    },
+
     // ========================================
     // MODALS
     // ========================================
@@ -764,6 +827,9 @@ const App = {
 
         // Chapter
         document.getElementById('btnAddChapter').addEventListener('click', () => this.openChapterModal());
+
+        // Royalty
+        document.getElementById('btnAddRoyalty').addEventListener('click', () => this.openRoyaltyModal());
 
         // Delete
         document.getElementById('btnDeleteBook').addEventListener('click', () => this.confirmDeleteBook());
@@ -803,6 +869,7 @@ const App = {
 
         form.reset();
         document.getElementById('bookId').value = '';
+        document.getElementById('bookLaunched').checked = false;
 
         if (bookId) {
             const book = this.books.find(b => b.id === bookId);
@@ -813,6 +880,7 @@ const App = {
                 document.getElementById('bookAuthor').value = book.author;
                 document.getElementById('bookColor').value = book.color;
                 document.getElementById('bookEmoji').value = book.emoji || '📖';
+                document.getElementById('bookLaunched').checked = book.isLaunched || false;
 
                 document.querySelectorAll('#formBook .color-option').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.color === book.color);
@@ -909,6 +977,7 @@ const App = {
         form.reset();
         document.getElementById('characterId').value = '';
         document.getElementById('characterEmoji').value = '👤';
+        document.getElementById('characterType').value = 'principal';
 
         if (characterId) {
             const char = this.characters.find(c => c.id === characterId);
@@ -916,6 +985,7 @@ const App = {
                 title.textContent = 'Editar Personagem';
                 document.getElementById('characterId').value = char.id;
                 document.getElementById('characterName').value = char.name;
+                document.getElementById('characterType').value = char.type || 'principal';
                 document.getElementById('characterAge').value = char.age || '';
                 document.getElementById('characterGender').value = char.gender || '';
                 document.getElementById('characterProfession').value = char.profession || '';
@@ -1024,6 +1094,33 @@ const App = {
 
     editScenario(id) { this.openScenarioModal(id); },
     editChapter(id) { this.openChapterModal(id); },
+    editRoyalty(id) { this.openRoyaltyModal(id); },
+
+    openRoyaltyModal(royaltyId = null) {
+        const form = document.getElementById('formRoyalty');
+        const title = document.getElementById('modalRoyaltyTitle');
+
+        form.reset();
+        document.getElementById('royaltyId').value = '';
+        document.getElementById('royaltyDate').value = Storage.getDateString();
+
+        if (royaltyId) {
+            const royalty = this.royalties.find(r => r.id === royaltyId);
+            if (royalty) {
+                title.textContent = 'Editar Royalty';
+                document.getElementById('royaltyId').value = royalty.id;
+                document.getElementById('royaltyDate').value = royalty.date;
+                document.getElementById('royaltyKenps').value = royalty.kenps || '';
+                document.getElementById('royaltyOrders').value = royalty.orders || '';
+                document.getElementById('royaltyValue').value = royalty.value || '';
+            }
+        } else {
+            title.textContent = 'Novo Registro de Royalty';
+        }
+
+        this.openModal('modalRoyalty');
+        lucide.createIcons();
+    },
 
     updateBookSelect() {
         const select = document.getElementById('recordBook');
@@ -1070,6 +1167,12 @@ const App = {
         this.openModal('modalConfirm');
     },
 
+    deleteRoyalty(royaltyId) {
+        this.currentDeleteTarget = { type: 'royalty', id: royaltyId };
+        document.getElementById('confirmMessage').textContent = 'Tem certeza que deseja excluir este registro de royalty?';
+        this.openModal('modalConfirm');
+    },
+
     async executeDelete() {
         if (!this.currentDeleteTarget) return;
 
@@ -1101,6 +1204,11 @@ const App = {
                 this.chapters = this.chapters.filter(c => c.id !== id);
                 this.renderChapters();
                 this.showToast('Capítulo excluído!', 'success');
+            } else if (type === 'royalty') {
+                await Storage.deleteRoyalty(id);
+                this.royalties = this.royalties.filter(r => r.id !== id);
+                this.renderRoyalties();
+                this.showToast('Royalty excluído!', 'success');
             }
 
         } catch (error) {
@@ -1145,6 +1253,11 @@ const App = {
             e.preventDefault();
             await this.saveChapter();
         });
+
+        document.getElementById('formRoyalty').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveRoyalty();
+        });
     },
 
     async saveBook() {
@@ -1153,7 +1266,8 @@ const App = {
             title: document.getElementById('bookTitle').value.trim(),
             author: document.getElementById('bookAuthor').value.trim(),
             color: document.getElementById('bookColor').value,
-            emoji: document.getElementById('bookEmoji').value || '📖'
+            emoji: document.getElementById('bookEmoji').value || '📖',
+            isLaunched: document.getElementById('bookLaunched').checked
         };
 
         try {
@@ -1209,6 +1323,7 @@ const App = {
         const characterData = {
             bookId: this.currentBookId,
             name: document.getElementById('characterName').value.trim(),
+            type: document.getElementById('characterType').value,
             age: document.getElementById('characterAge').value.trim(),
             gender: document.getElementById('characterGender').value,
             profession: document.getElementById('characterProfession').value.trim(),
@@ -1326,6 +1441,37 @@ const App = {
         }
     },
 
+    async saveRoyalty() {
+        const royaltyId = document.getElementById('royaltyId').value;
+        const royaltyData = {
+            bookId: this.currentBookId,
+            date: document.getElementById('royaltyDate').value,
+            kenps: parseInt(document.getElementById('royaltyKenps').value) || 0,
+            orders: parseInt(document.getElementById('royaltyOrders').value) || 0,
+            value: parseFloat(document.getElementById('royaltyValue').value) || 0
+        };
+
+        try {
+            if (royaltyId) {
+                await Storage.updateRoyalty(royaltyId, royaltyData);
+                const index = this.royalties.findIndex(r => r.id === royaltyId);
+                if (index !== -1) this.royalties[index] = { id: royaltyId, ...royaltyData };
+                this.showToast('Royalty atualizado!', 'success');
+            } else {
+                const newRoyalty = await Storage.createRoyalty(royaltyData);
+                this.royalties.push(newRoyalty);
+                // Sort by date descending
+                this.royalties.sort((a, b) => new Date(b.date) - new Date(a.date));
+                this.showToast('Royalty registrado!', 'success');
+            }
+
+            this.renderRoyalties();
+            this.closeAllModals();
+        } catch (error) {
+            this.showToast('Erro ao salvar royalty.', 'error');
+        }
+    },
+
     // ========================================
     // UTILITIES
     // ========================================
@@ -1350,6 +1496,16 @@ const App = {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    },
+
+    getCharacterTypeLabel(type) {
+        const labels = {
+            'principal': 'Principal',
+            'secundario': 'Secundário',
+            'animal': 'Animal',
+            'figurante': 'Figurante'
+        };
+        return labels[type] || 'Principal';
     },
 
     darkenColor(color) {

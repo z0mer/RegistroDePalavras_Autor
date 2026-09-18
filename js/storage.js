@@ -378,6 +378,67 @@ const Storage = {
     },
 
     // ========================================
+    // ROYALTIES COLLECTION
+    // ========================================
+
+    async getRoyaltiesByBook(bookId) {
+        try {
+            const snapshot = await db.collection('royalties')
+                .where('bookId', '==', bookId)
+                .get();
+            const royalties = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            return royalties.sort((a, b) => {
+                // Sort by date descending (most recent first)
+                return new Date(b.date) - new Date(a.date);
+            });
+        } catch (error) {
+            console.error('Erro ao buscar royalties:', error);
+            throw error;
+        }
+    },
+
+    async createRoyalty(royaltyData) {
+        if (!this.userId) throw new Error('Usuário não autenticado');
+        try {
+            const docRef = await db.collection('royalties').add({
+                ...royaltyData,
+                userId: this.userId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return { id: docRef.id, ...royaltyData };
+        } catch (error) {
+            console.error('Erro ao criar royalty:', error);
+            throw error;
+        }
+    },
+
+    async updateRoyalty(royaltyId, royaltyData) {
+        try {
+            await db.collection('royalties').doc(royaltyId).update({
+                ...royaltyData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return { id: royaltyId, ...royaltyData };
+        } catch (error) {
+            console.error('Erro ao atualizar royalty:', error);
+            throw error;
+        }
+    },
+
+    async deleteRoyalty(royaltyId) {
+        try {
+            await db.collection('royalties').doc(royaltyId).delete();
+            return true;
+        } catch (error) {
+            console.error('Erro ao excluir royalty:', error);
+            throw error;
+        }
+    },
+
+    // ========================================
     // STATISTICS HELPERS
     // ========================================
 

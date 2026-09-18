@@ -807,6 +807,20 @@ svg[data-lucide] {
         font-size: 3rem;
         opacity: 0.3;
     }
+    
+    .launched-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 }
 
 .book-card-content {
@@ -1190,19 +1204,76 @@ svg[data-lucide] {
 }
 
 .character-traits {
-    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid $border-color;
+    margin-top: 16px;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
     overflow: hidden;
     
     &.collapsed {
         max-height: 0;
         opacity: 0;
         padding-top: 0;
-        padding-bottom: 0;
+        margin-top: 0;
+        border-top: none;
     }
     
     &:not(.collapsed) {
-        max-height: 1000px;
+        max-height: 2000px;
         opacity: 1;
+    }
+    
+    .trait {
+        strong {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: $accent-primary;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        p {
+            font-size: 0.9rem;
+            color: $text-secondary;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    }
+}
+
+.character-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    
+    &.type-principal {
+        background: rgba(132, 182, 244, 0.2);
+        color: $accent-primary;
+    }
+    
+    &.type-secundario {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+    
+    &.type-animal {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+    }
+    
+    &.type-figurante {
+        background: rgba(100, 116, 139, 0.2);
+        color: #94a3b8;
     }
 }
 
@@ -1519,6 +1590,144 @@ svg[data-lucide] {
         padding: 4px 8px;
         font-size: 0.7rem;
         gap: 4px;
+    }
+}
+
+// ========================================
+// ROYALTIES TAB
+// ========================================
+
+.royalties-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+    
+    @media (max-width: $mobile) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+.royalties-stat-card {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 20px;
+    text-align: center;
+    
+    .royalties-stat-value {
+        display: block;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: $accent-primary;
+        margin-bottom: 4px;
+    }
+    
+    .royalties-stat-label {
+        font-size: 0.85rem;
+        color: $text-secondary;
+    }
+}
+
+.royalties-table-container {
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    overflow: hidden;
+}
+
+.royalties-table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid $border-color;
+    }
+    
+    th {
+        background: $bg-tertiary;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    td {
+        font-size: 0.95rem;
+    }
+    
+    tbody tr {
+        transition: $transition;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        &:last-child td {
+            border-bottom: none;
+        }
+    }
+    
+    .royalty-date {
+        font-weight: 500;
+        color: $text-primary;
+    }
+    
+    .royalty-kenps {
+        font-weight: 600;
+        color: #f59e0b;
+    }
+    
+    .royalty-orders {
+        font-weight: 600;
+        color: #60a5fa;
+    }
+    
+    .royalty-value {
+        font-weight: 700;
+        color: #10b981;
+    }
+    
+    .royalty-actions {
+        width: 100px;
+        white-space: nowrap;
+        
+        .btn-icon {
+            display: inline-flex;
+            vertical-align: middle;
+            width: 36px;
+            height: 36px;
+            
+            &:first-child {
+                margin-right: 4px;
+            }
+            
+            svg {
+                color: var(--icon-color);
+            }
+        }
+    }
+}
+
+@media (max-width: $mobile) {
+    .royalties-table {
+        th, td {
+            padding: 10px 8px;
+            font-size: 0.85rem;
+        }
+        
+        .royalty-actions {
+            width: 70px;
+            
+            .btn-icon {
+                width: 30px;
+                height: 30px;
+            }
+        }
     }
 }
 
@@ -1860,6 +2069,52 @@ form {
     font-size: 0.75rem;
     color: $text-muted;
     margin-top: 6px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    
+    input[type="checkbox"] {
+        display: none;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        background: $border-color;
+        border-radius: 12px;
+        transition: background 0.3s ease;
+        
+        &::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+    }
+    
+    input:checked + .toggle-switch {
+        background: $accent-primary;
+        
+        &::after {
+            transform: translateX(20px);
+        }
+    }
+    
+    .toggle-text {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: $text-primary;
+    }
 }
 
 .form-row {
