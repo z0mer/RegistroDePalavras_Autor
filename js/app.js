@@ -150,6 +150,9 @@ const App = {
             this.updateDashboard();
             this.renderBooks();
             this.updateBookSelect();
+            
+            // Restore last page after data is loaded
+            this.restoreLastPage();
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             this.showToast('Erro ao carregar dados. Verifique sua conexão.', 'error');
@@ -185,9 +188,14 @@ const App = {
         document.getElementById('btnBackToBooks').addEventListener('click', () => {
             this.navigateTo('books');
         });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('hashchange', () => {
+            this.restoreLastPage();
+        });
     },
 
-    navigateTo(page) {
+    navigateTo(page, bookId = null) {
         document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.page === page);
         });
@@ -197,13 +205,63 @@ const App = {
         if (page === 'dashboard') {
             document.getElementById('dashboardPage').classList.add('active');
             this.updateChart();
+            window.location.hash = 'dashboard';
+            localStorage.setItem('lastPage', 'dashboard');
+            localStorage.removeItem('lastBookId');
         } else if (page === 'books') {
             document.getElementById('booksPage').classList.add('active');
+            window.location.hash = 'books';
+            localStorage.setItem('lastPage', 'books');
+            localStorage.removeItem('lastBookId');
         } else if (page === 'bookDetails') {
             document.getElementById('bookDetailsPage').classList.add('active');
+            if (this.currentBookId) {
+                window.location.hash = `book/${this.currentBookId}`;
+                localStorage.setItem('lastPage', 'bookDetails');
+                localStorage.setItem('lastBookId', this.currentBookId);
+            }
         } else if (page === 'comparison') {
             document.getElementById('comparisonPage').classList.add('active');
             this.loadComparisonData();
+            window.location.hash = 'comparison';
+            localStorage.setItem('lastPage', 'comparison');
+            localStorage.removeItem('lastBookId');
+        }
+    },
+
+    restoreLastPage() {
+        // Check URL hash first, then localStorage
+        const hash = window.location.hash.slice(1);
+        
+        if (hash) {
+            if (hash === 'dashboard') {
+                this.navigateTo('dashboard');
+            } else if (hash === 'books') {
+                this.navigateTo('books');
+            } else if (hash === 'comparison') {
+                this.navigateTo('comparison');
+            } else if (hash.startsWith('book/')) {
+                const bookId = hash.split('/')[1];
+                if (bookId && this.books.find(b => b.id === bookId)) {
+                    this.openBookDetails(bookId);
+                } else {
+                    this.navigateTo('books');
+                }
+            }
+        } else {
+            // Fallback to localStorage
+            const lastPage = localStorage.getItem('lastPage');
+            const lastBookId = localStorage.getItem('lastBookId');
+            
+            if (lastPage === 'bookDetails' && lastBookId && this.books.find(b => b.id === lastBookId)) {
+                this.openBookDetails(lastBookId);
+            } else if (lastPage === 'books') {
+                this.navigateTo('books');
+            } else if (lastPage === 'comparison') {
+                this.navigateTo('comparison');
+            } else {
+                this.navigateTo('dashboard');
+            }
         }
     },
 
