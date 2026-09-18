@@ -355,6 +355,20 @@
                                 <span class="expenses-stat-label">Pendente</span>
                             </div>
                         </div>
+                        <div class="expenses-filter">
+                            <label>Filtrar por:</label>
+                            <select id="expensesTypeFilter">
+                                <option value="all">Todos os tipos</option>
+                                <option value="Brindes">🎁 Brindes</option>
+                                <option value="Capa">📕 Capa</option>
+                                <option value="Diagramação">📐 Diagramação</option>
+                                <option value="Divulgação">📢 Divulgação</option>
+                                <option value="Feed">📱 Feed</option>
+                                <option value="Ilustração">🎨 Ilustração</option>
+                                <option value="Publicidade">📣 Publicidade</option>
+                                <option value="Revisão">📝 Revisão</option>
+                            </select>
+                        </div>
                         <div class="section-header">
                             <h3>Registro de Gastos</h3>
                             <button class="btn-primary btn-sm" id="btnAddExpense">+ Gasto</button>
@@ -748,14 +762,19 @@
                     <label for="expenseType">Tipo de Serviço *</label>
                     <select id="expenseType" required>
                         <option value="">Selecione...</option>
-                        <option value="Ilustração">🎨 Ilustração</option>
-                        <option value="Revisão">📝 Revisão</option>
-                        <option value="Diagramação">📐 Diagramação</option>
+                        <option value="Brindes">🎁 Brindes</option>
                         <option value="Capa">📕 Capa</option>
-                        <option value="Publicidade">📣 Publicidade</option>
+                        <option value="Diagramação">📐 Diagramação</option>
                         <option value="Divulgação">📢 Divulgação</option>
                         <option value="Feed">📱 Feed</option>
+                        <option value="Ilustração">🎨 Ilustração</option>
+                        <option value="Publicidade">📣 Publicidade</option>
+                        <option value="Revisão">📝 Revisão</option>
                     </select>
+                </div>
+                <div class="form-group" id="expenseMonthGroup" style="display: none;">
+                    <label for="expenseMonth">Mês da Divulgação</label>
+                    <input type="month" id="expenseMonth">
                 </div>
                 <div class="form-group">
                     <label for="expenseItem">Item Contratado *</label>

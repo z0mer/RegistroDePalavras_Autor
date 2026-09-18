@@ -941,10 +941,30 @@ const App = {
         const tbody = document.getElementById('expensesBody');
         const emptyState = document.getElementById('expensesEmpty');
         const table = document.querySelector('.expenses-table');
+        const filterSelect = document.getElementById('expensesTypeFilter');
 
-        // Update stats
-        const totalValue = this.expenses.reduce((sum, e) => sum + (e.value || 0), 0);
-        const paidValue = this.expenses.reduce((sum, e) => {
+        // Setup filter change listener (only once)
+        if (!filterSelect.hasAttribute('data-listener')) {
+            filterSelect.setAttribute('data-listener', 'true');
+            filterSelect.addEventListener('change', () => this.renderExpenses());
+        }
+
+        // Filter expenses based on type selection
+        const selectedType = filterSelect.value;
+        let filteredExpenses = this.expenses;
+        
+        if (selectedType !== 'all') {
+            filteredExpenses = this.expenses.filter(e => e.type === selectedType);
+        }
+
+        // Sort alphabetically by type
+        filteredExpenses = [...filteredExpenses].sort((a, b) => 
+            (a.type || '').localeCompare(b.type || '', 'pt-BR', { sensitivity: 'base' })
+        );
+
+        // Update stats based on filtered data
+        const totalValue = filteredExpenses.reduce((sum, e) => sum + (e.value || 0), 0);
+        const paidValue = filteredExpenses.reduce((sum, e) => {
             const paidPercent = e.paidPercent || 0;
             return sum + ((e.value || 0) * paidPercent / 100);
         }, 0);
@@ -954,7 +974,7 @@ const App = {
         document.getElementById('expensesPaidValue').textContent = `R$ ${paidValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         document.getElementById('expensesPendingValue').textContent = `R$ ${pendingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-        if (this.expenses.length === 0) {
+        if (filteredExpenses.length === 0) {
             table.style.display = 'none';
             emptyState.style.display = 'block';
             return;
@@ -963,18 +983,26 @@ const App = {
         table.style.display = 'table';
         emptyState.style.display = 'none';
 
-        tbody.innerHTML = this.expenses.map(expense => {
+        tbody.innerHTML = filteredExpenses.map(expense => {
             const typeColor = Storage.getExpenseTypeColor(expense.type);
             const formattedValue = `R$ ${(expense.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             const paidPercent = expense.paidPercent || 0;
             const paidLabel = paidPercent === 0 ? 'Pendente' : paidPercent === 50 ? '50% Pago' : 'Pago';
+            
+            // Show month for Divulgação
+            let itemDisplay = this.escapeHtml(expense.item || '-');
+            if (expense.type === 'Divulgação' && expense.month) {
+                const [year, month] = expense.month.split('-');
+                const monthName = new Date(year, parseInt(month) - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                itemDisplay += ` <span class="expense-month">(${monthName})</span>`;
+            }
 
             return `
                 <tr>
                     <td class="expense-type" data-label="Tipo">
                         <span class="expense-type-badge" style="background: ${typeColor}">${expense.type}</span>
                     </td>
-                    <td class="expense-item" data-label="Item">${this.escapeHtml(expense.item || '-')}</td>
+                    <td class="expense-item" data-label="Item">${itemDisplay}</td>
                     <td class="expense-professional" data-label="Profissional">${this.escapeHtml(expense.professional || '-')}</td>
                     <td class="expense-value" data-label="Valor">${formattedValue}</td>
                     <td class="expense-paid" data-label="Status">
@@ -1296,11 +1324,24 @@ const App = {
     openExpenseModal(expenseId = null) {
         const form = document.getElementById('formExpense');
         const title = document.getElementById('modalExpenseTitle');
+        const monthGroup = document.getElementById('expenseMonthGroup');
+        const typeSelect = document.getElementById('expenseType');
 
         form.reset();
         document.getElementById('expenseId').value = '';
         document.getElementById('expenseType').value = '';
         document.getElementById('expensePaidPercent').value = '0';
+        document.getElementById('expenseMonth').value = '';
+        monthGroup.style.display = 'none';
+
+        // Setup type change listener for showing/hiding month field
+        if (!typeSelect.hasAttribute('data-expense-listener')) {
+            typeSelect.setAttribute('data-expense-listener', 'true');
+            typeSelect.addEventListener('change', () => {
+                const monthGroup = document.getElementById('expenseMonthGroup');
+                monthGroup.style.display = typeSelect.value === 'Divulgação' ? 'block' : 'none';
+            });
+        }
 
         if (expenseId) {
             const expense = this.expenses.find(e => e.id === expenseId);
@@ -1312,6 +1353,8 @@ const App = {
                 document.getElementById('expenseProfessional').value = expense.professional || '';
                 document.getElementById('expenseValue').value = expense.value || '';
                 document.getElementById('expensePaidPercent').value = expense.paidPercent || '0';
+                document.getElementById('expenseMonth').value = expense.month || '';
+                monthGroup.style.display = expense.type === 'Divulgação' ? 'block' : 'none';
             }
         } else {
             title.textContent = 'Novo Gasto';
@@ -1718,14 +1761,20 @@ const App = {
 
     async saveExpense() {
         const expenseId = document.getElementById('expenseId').value;
+        const expenseType = document.getElementById('expenseType').value;
         const expenseData = {
             bookId: this.currentBookId,
-            type: document.getElementById('expenseType').value,
+            type: expenseType,
             item: document.getElementById('expenseItem').value.trim(),
             professional: document.getElementById('expenseProfessional').value.trim(),
             value: parseFloat(document.getElementById('expenseValue').value) || 0,
             paidPercent: parseInt(document.getElementById('expensePaidPercent').value) || 0
         };
+
+        // Add month field only for Divulgação
+        if (expenseType === 'Divulgação') {
+            expenseData.month = document.getElementById('expenseMonth').value || '';
+        }
 
         try {
             if (expenseId) {

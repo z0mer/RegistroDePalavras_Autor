@@ -522,13 +522,14 @@ const Storage = {
     // Expense type colors helper
     getExpenseTypeColor(type) {
         const colors = {
-            'Ilustração': '#e91e63',
-            'Revisão': '#9c27b0',
-            'Diagramação': '#3f51b5',
+            'Brindes': '#8bc34a',
             'Capa': '#00bcd4',
-            'Publicidade': '#ff9800',
+            'Diagramação': '#3f51b5',
             'Divulgação': '#4caf50',
-            'Feed': '#607d8b'
+            'Feed': '#607d8b',
+            'Ilustração': '#e91e63',
+            'Publicidade': '#ff9800',
+            'Revisão': '#9c27b0'
         };
         return colors[type] || '#888888';
     },

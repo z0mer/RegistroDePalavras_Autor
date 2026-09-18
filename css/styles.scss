@@ -1955,6 +1955,51 @@ svg[data-lucide] {
     }
 }
 
+.expenses-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    
+    label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: $text-secondary;
+    }
+    
+    select {
+        padding: 8px 16px;
+        background: $bg-secondary;
+        border: 1px solid $border-color;
+        border-radius: $radius-md;
+        color: $text-primary;
+        font-size: 0.9rem;
+        min-width: 180px;
+        cursor: pointer;
+        
+        &:focus {
+            outline: none;
+            border-color: $accent-primary;
+        }
+    }
+    
+    @media (max-width: $mobile) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        
+        select {
+            width: 100%;
+        }
+    }
+}
+
+.expense-month {
+    font-size: 0.8rem;
+    color: $text-secondary;
+    font-style: italic;
+}
+
 .expenses-table-container {
     background: $bg-secondary;
     border: 1px solid $border-color;
