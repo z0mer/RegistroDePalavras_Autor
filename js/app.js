@@ -989,9 +989,9 @@ const App = {
             const paidPercent = expense.paidPercent || 0;
             const paidLabel = paidPercent === 0 ? 'Pendente' : paidPercent === 50 ? '50% Pago' : 'Pago';
             
-            // Show month for Divulgação
+            // Show month for Divulgação and Publicidade
             let itemDisplay = this.escapeHtml(expense.item || '-');
-            if (expense.type === 'Divulgação' && expense.month) {
+            if ((expense.type === 'Divulgação' || expense.type === 'Publicidade') && expense.month) {
                 const [year, month] = expense.month.split('-');
                 const monthName = new Date(year, parseInt(month) - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
                 itemDisplay += ` <span class="expense-month">(${monthName})</span>`;
@@ -1339,7 +1339,7 @@ const App = {
             typeSelect.setAttribute('data-expense-listener', 'true');
             typeSelect.addEventListener('change', () => {
                 const monthGroup = document.getElementById('expenseMonthGroup');
-                monthGroup.style.display = typeSelect.value === 'Divulgação' ? 'block' : 'none';
+                monthGroup.style.display = (typeSelect.value === 'Divulgação' || typeSelect.value === 'Publicidade') ? 'block' : 'none';
             });
         }
 
@@ -1354,7 +1354,7 @@ const App = {
                 document.getElementById('expenseValue').value = expense.value || '';
                 document.getElementById('expensePaidPercent').value = expense.paidPercent || '0';
                 document.getElementById('expenseMonth').value = expense.month || '';
-                monthGroup.style.display = expense.type === 'Divulgação' ? 'block' : 'none';
+                monthGroup.style.display = (expense.type === 'Divulgação' || expense.type === 'Publicidade') ? 'block' : 'none';
             }
         } else {
             title.textContent = 'Novo Gasto';
@@ -1771,8 +1771,8 @@ const App = {
             paidPercent: parseInt(document.getElementById('expensePaidPercent').value) || 0
         };
 
-        // Add month field only for Divulgação
-        if (expenseType === 'Divulgação') {
+        // Add month field for Divulgação and Publicidade
+        if (expenseType === 'Divulgação' || expenseType === 'Publicidade') {
             expenseData.month = document.getElementById('expenseMonth').value || '';
         }
 
