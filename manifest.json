@@ -1,6 +1,6 @@
 {
   "name": "Registro de Palavras",
-  "short_name": "Registro",
+  "short_name": "Registro de Palavras",
   "description": "Acompanhe seu progresso de escrita",
   "start_url": "./",
   "scope": "./",
@@ -13,7 +13,7 @@
       "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
