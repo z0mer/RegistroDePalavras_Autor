@@ -1,39 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#84b6f4"/>
-      <stop offset="100%" style="stop-color:#6366f1"/>
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#84b6f4"/>
+    </linearGradient>
+    <linearGradient id="feather" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0e7ff"/>
     </linearGradient>
   </defs>
+  
   <!-- Background -->
-  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
-  <!-- Book icon -->
-  <g transform="translate(96, 80)">
-    <!-- Book pages -->
-    <path d="M160 0 C100 0 60 20 60 20 L60 280 C60 280 100 260 160 260 C220 260 260 280 260 280 L260 20 C260 20 220 0 160 0 Z" fill="white" opacity="0.95"/>
-    <!-- Book spine/center -->
-    <path d="M160 0 L160 260" stroke="#84b6f4" stroke-width="4" fill="none"/>
-    <!-- Left page lines -->
-    <g stroke="#84b6f4" stroke-width="6" stroke-linecap="round" opacity="0.6">
-      <line x1="85" y1="60" x2="135" y2="60"/>
-      <line x1="85" y1="90" x2="140" y2="90"/>
-      <line x1="85" y1="120" x2="130" y2="120"/>
-      <line x1="85" y1="150" x2="145" y2="150"/>
-      <line x1="85" y1="180" x2="125" y2="180"/>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  
+  <!-- Feather quill -->
+  <g transform="translate(256, 256) rotate(-45) translate(-140, -140)">
+    <!-- Main feather body -->
+    <path d="M 280 20 
+             Q 260 60 240 120
+             Q 220 180 180 240
+             Q 140 300 80 360
+             Q 60 380 40 400
+             L 50 410
+             Q 100 370 160 310
+             Q 220 250 260 180
+             Q 300 110 300 40
+             Q 295 25 280 20 Z" 
+          fill="url(#feather)" 
+          stroke="#c7d2fe" 
+          stroke-width="2"/>
+    
+    <!-- Feather spine/rachis -->
+    <path d="M 280 25 Q 200 150 50 405" 
+          stroke="#a5b4fc" 
+          stroke-width="4" 
+          fill="none"
+          stroke-linecap="round"/>
+    
+    <!-- Left barbs -->
+    <g stroke="#c7d2fe" stroke-width="2" fill="none" opacity="0.7">
+      <path d="M 270 50 Q 240 60 220 90"/>
+      <path d="M 255 90 Q 220 100 190 140"/>
+      <path d="M 235 130 Q 195 145 160 190"/>
+      <path d="M 210 175 Q 170 195 130 245"/>
+      <path d="M 180 225 Q 140 250 100 300"/>
+      <path d="M 145 280 Q 110 310 75 355"/>
     </g>
-    <!-- Right page lines -->
-    <g stroke="#84b6f4" stroke-width="6" stroke-linecap="round" opacity="0.6">
-      <line x1="185" y1="60" x2="235" y2="60"/>
-      <line x1="185" y1="90" x2="230" y2="90"/>
-      <line x1="185" y1="120" x2="240" y2="120"/>
-      <line x1="185" y1="150" x2="225" y2="150"/>
-      <line x1="185" y1="180" x2="235" y2="180"/>
+    
+    <!-- Right barbs -->
+    <g stroke="#c7d2fe" stroke-width="2" fill="none" opacity="0.7">
+      <path d="M 285 45 Q 295 70 290 100"/>
+      <path d="M 275 85 Q 290 115 280 150"/>
+      <path d="M 260 130 Q 280 165 265 200"/>
+      <path d="M 240 180 Q 265 215 245 255"/>
+      <path d="M 210 235 Q 240 270 215 310"/>
+      <path d="M 175 295 Q 200 330 170 365"/>
     </g>
-    <!-- Pen -->
-    <g transform="translate(200, 200) rotate(45)">
-      <rect x="0" y="0" width="20" height="120" rx="3" fill="#f59e0b"/>
-      <polygon points="10,120 0,145 20,145" fill="#1f2937"/>
-      <rect x="0" y="0" width="20" height="25" rx="3" fill="#fbbf24"/>
-    </g>
+    
+    <!-- Nib/tip -->
+    <path d="M 40 400 L 20 440 L 55 415 Z" 
+          fill="#fbbf24"/>
+    
+    <!-- Ink drop -->
+    <circle cx="25" cy="455" r="12" fill="#6366f1" opacity="0.8"/>
   </g>
 </svg>
