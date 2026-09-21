@@ -8,6 +8,15 @@ const Auth = {
     // Initialize auth state listener
     init() {
         return new Promise((resolve) => {
+            // Handle redirect result first (for PWA standalone mode)
+            auth.getRedirectResult().then((result) => {
+                if (result && result.user) {
+                    console.log('✅ Login via redirect:', result.user.displayName);
+                }
+            }).catch((error) => {
+                console.error('❌ Erro no redirect:', error);
+            });
+
             auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
                 
@@ -30,16 +39,29 @@ const Auth = {
     // Sign in with Google
     async signInWithGoogle() {
         try {
-            const result = await auth.signInWithPopup(googleProvider);
-            console.log('✅ Login realizado:', result.user.displayName);
-            return result.user;
+            // Check if running as installed PWA (standalone mode)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true;
+            
+            if (isStandalone) {
+                // Use redirect for PWA standalone mode (popup doesn't work well)
+                await auth.signInWithRedirect(googleProvider);
+                return null; // Will redirect, so no return
+            } else {
+                // Use popup for browser
+                const result = await auth.signInWithPopup(googleProvider);
+                console.log('✅ Login realizado:', result.user.displayName);
+                return result.user;
+            }
         } catch (error) {
             console.error('❌ Erro no login:', error);
             
             if (error.code === 'auth/popup-closed-by-user') {
                 throw new Error('Login cancelado pelo usuário');
             } else if (error.code === 'auth/popup-blocked') {
-                throw new Error('Pop-up bloqueado pelo navegador. Permita pop-ups para este site.');
+                // Fallback to redirect if popup is blocked
+                await auth.signInWithRedirect(googleProvider);
+                return null;
             } else {
                 throw new Error('Erro ao fazer login. Tente novamente.');
             }
